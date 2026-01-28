@@ -286,8 +286,25 @@ I hold a PhD in English from the University of Oxford, an MA from the University
     <script>
       // Fetch GitHub activity
       async function loadGitHubActivity() {
+        const GITHUB_TOKEN = '';
+
         try {
-          const response = await fetch('https://api.github.com/users/LaurellaRobert/events/public?per_page=5');
+          const headers = {};
+          if (GITHUB_TOKEN) {
+            headers['Authorization'] = `token ${GITHUB_TOKEN}`;
+          }
+
+          const response = await fetch('https://api.github.com/users/LaurellaRobert/events/public?per_page=5', { headers });
+
+          // Check for rate limiting
+          if (!response.ok) {
+            if (response.status === 403) {
+              document.getElementById('github-activity').innerHTML = '<li class="activity-item">GitHub API rate limit reached. Try again later.</li>';
+              return;
+            }
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
           const events = await response.json();
 
           // Build all activity items in memory first
@@ -307,7 +324,7 @@ I hold a PhD in English from the University of Oxford, an MA from the University
                 if (event.payload.before && event.payload.head) {
                   try {
                     const compareUrl = `https://api.github.com/repos/${event.repo.name}/compare/${event.payload.before}...${event.payload.head}`;
-                    const compareResponse = await fetch(compareUrl);
+                    const compareResponse = await fetch(compareUrl, { headers });
                     const compareData = await compareResponse.json();
 
                     if (compareData.commits && compareData.commits.length > 0) {
@@ -396,12 +413,28 @@ I hold a PhD in English from the University of Oxford, an MA from the University
 
     <script>
       // Console easter egg for the curious
-      console.log('%c👋 Hello, fellow developer!', 'font-size: 20px; font-weight: bold; color: #333;');
-      console.log('%cIf you\'re reading this, you\'re probably the kind of person I want to talk to.', 'font-size: 14px; color: #666;');
-      console.log('%c\nPhD in English → Product Marketing → Still shipping code', 'font-size: 13px; color: #999; font-style: italic;');
-      console.log('%c\nThis site: Vanilla JS + anime.js v4 (SVG motion paths), GitHub API, deployed on Pages.', 'font-size: 12px; color: #999;');
-      console.log('%c\nLet\'s chat: robert.laurella@gmail.com or DM me on LinkedIn', 'font-size: 13px; color: #333;');
-      console.log('%c\n"The best products come from people who can speak both languages: engineering and human."', 'font-size: 12px; color: #999; font-style: italic;');
+      console.log('%c\n' +
+        '  ╔═══════════════════════════════════════════════════════════════════════════════╗\n' +
+        '  ║                                                                               ║\n' +
+        '  ║   ____        _               _     _                        _ _             ║\n' +
+        '  ║  |  _ \\ ___  | |__   ___ _ __| |_  | |    __ _ _   _ _ __ ___| | | __ _     ║\n' +
+        '  ║  | |_) / _ \\ | \'_ \\ / _ \\ \'__| __| | |   / _` | | | | \'__/ _ \\ | |/ _` |    ║\n' +
+        '  ║  |  _ < (_) || |_) |  __/ |  | |_  | |__| (_| | |_| | | |  __/ | | (_| |    ║\n' +
+        '  ║  |_| \\_\\___/ |_.__/ \\___|_|   \\__| |_____\\__,_|\\__,_|_|  \\___|_|_|\\__,_|    ║\n' +
+        '  ║                                                                               ║\n' +
+        '  ║  👋 Hello, fellow developer!                                                 ║\n' +
+        '  ║                                                                               ║\n' +
+        '  ╚═══════════════════════════════════════════════════════════════════════════════╝\n',
+        'font-family: monospace; color: #9999ff; font-size: 12px; line-height: 1.2;'
+      );
+      console.log('%cIf you\'re reading this, you\'re probably the kind of person I want to talk to.', 'font-size: 14px; color: #666; font-weight: bold;');
+      console.log('%c\n📚 PhD in English → 📈 Product Marketing → 💻 Still shipping code', 'font-size: 13px; color: #999; font-style: italic;');
+      console.log('%c\n🛠️  Tech Stack: Vanilla JS + anime.js v4 (SVG motion paths), GitHub API, deployed on Pages.', 'font-size: 12px; color: #999;');
+      console.log('%c\n⌨️  Interactive Easter Eggs:', 'font-size: 12px; color: #9999ff; font-weight: bold;');
+      console.log('%c   • Press "d" to toggle dark mode', 'font-size: 11px; color: #666;');
+      console.log('%c   • Click the diamond animation to spawn colorful tracers (max 10)', 'font-size: 11px; color: #666;');
+      console.log('%c\n💬 Let\'s chat: robert.laurella@gmail.com or DM me on LinkedIn', 'font-size: 13px; color: #333; font-weight: bold;');
+      console.log('%c\n💡 "The best products come from people who can speak both languages: engineering and human."', 'font-size: 12px; color: #999; font-style: italic;');
     </script>
 
     <script>
@@ -419,7 +452,8 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         moonIcon.style.display = 'block';
       }
 
-      themeToggle.addEventListener('click', () => {
+      // Function to toggle dark mode
+      function toggleDarkMode() {
         document.body.classList.toggle('dark-mode');
 
         if (document.body.classList.contains('dark-mode')) {
@@ -431,6 +465,18 @@ I hold a PhD in English from the University of Oxford, an MA from the University
           sunIcon.style.display = 'block';
           moonIcon.style.display = 'none';
         }
+      }
+
+      // Button click handler
+      themeToggle.addEventListener('click', toggleDarkMode);
+
+      // Keyboard shortcut: Press 'd' to toggle dark mode
+      document.addEventListener('keydown', (e) => {
+        // Only trigger if not typing in an input/textarea
+        if (e.key === 'd' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+          toggleDarkMode();
+          console.log('🌓 Dark mode toggled via keyboard shortcut');
+        }
       });
     </script>
 
@@ -441,12 +487,64 @@ I hold a PhD in English from the University of Oxford, an MA from the University
       // Get the path length
       const path = document.querySelector('#motion-path');
       const pathLength = path.getTotalLength();
+      const svgElement = document.querySelector('.motion-container svg');
+      const animationPanel = document.querySelector('.animation-panel');
 
       // Set up stroke-dasharray and initial dashoffset
       path.style.strokeDasharray = pathLength;
       path.style.strokeDashoffset = pathLength;
 
-      // Animate element along the motion path
+      // Additional tracers management
+      const additionalTracers = [];
+      const maxTracers = 10;
+      const tracerColors = ['#9999ff', '#ff99cc', '#ffcc99', '#99ffcc', '#cc99ff', '#99ccff'];
+
+      function createTracer(delay = 0) {
+        const color = tracerColors[Math.floor(Math.random() * tracerColors.length)];
+        const tracer = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        tracer.setAttribute('class', 'additional-tracer');
+        tracer.setAttribute('r', 5);
+        tracer.setAttribute('fill', color);
+        tracer.setAttribute('opacity', 0.9);
+        svgElement.appendChild(tracer);
+
+        const animation = animate(tracer, {
+          ease: 'linear',
+          duration: 8000,
+          loop: true,
+          delay: delay,
+          ...svg.createMotionPath('#motion-path')
+        });
+
+        additionalTracers.push({
+          element: tracer,
+          animation: animation,
+          color: color,
+          createdAt: Date.now()
+        });
+
+        // Auto-remove after 15 seconds
+        setTimeout(() => {
+          const index = additionalTracers.findIndex(t => t.element === tracer);
+          if (index !== -1) {
+            animation.pause();
+            tracer.remove();
+            additionalTracers.splice(index, 1);
+          }
+        }, 15000);
+      }
+
+      // Click to add tracers
+      animationPanel.addEventListener('click', (e) => {
+        if (additionalTracers.length < maxTracers) {
+          createTracer(0); // Start immediately
+          console.log('✨ Tracer spawned! Click to add more (max 10)');
+        } else {
+          console.log('⚠️ Max tracers reached (10)');
+        }
+      });
+
+      // Animate main tracer along the motion path
       animate('.tracer', {
         ease: 'linear',
         duration: 8000,
