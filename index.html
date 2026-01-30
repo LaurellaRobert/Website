@@ -26,9 +26,20 @@
       overflow-y: auto;
     }
     .content-inner {
-      max-width: 600px;
+      width: 85%;
+      max-width: 85%;
       margin: 0 auto;
       padding: 40px 40px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .content-header {
+      position: sticky;
+      top: 0;
+      background: inherit;
+      z-index: 100;
+      padding-bottom: 10px;
     }
     .content-inner h1 {
       margin-top: 0;
@@ -37,6 +48,13 @@
     .content-inner p {
       margin-top: 0;
       line-height: 1.6;
+    }
+    .tab-content-wrapper {
+      flex: 1;
+      position: relative;
+      padding-top: 10px;
+      width: 100%;
+      max-width: 100%;
     }
     .animation-panel {
       flex: 0 0 35%;
@@ -76,6 +94,83 @@
       width: 24px;
       height: 24px;
     }
+    /* Tab navigation */
+    .tab-nav {
+      display: flex;
+      gap: 0;
+      margin-bottom: 25px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    .tab-button {
+      background: none;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #666;
+      transition: all 0.3s ease;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      font-weight: 500;
+    }
+    .tab-button:hover {
+      color: #333;
+    }
+    .tab-button.active {
+      color: #333;
+      border-bottom-color: #333;
+    }
+    .tab-content {
+      position: absolute;
+      top: 10px;
+      left: 0;
+      right: 0;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+      overflow-y: auto;
+      height: calc(100% - 10px);
+      width: 100%;
+      max-width: 100%;
+    }
+    .tab-content.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Terminal code display */
+    .terminal-code {
+      background: #1a1a1a;
+      border-radius: 8px;
+      padding: 30px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #e0e0e0;
+      overflow-x: auto;
+      margin-bottom: 20px;
+      min-height: 500px;
+      white-space: pre;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    .terminal-code .comment {
+      color: #666;
+    }
+    .terminal-code .keyword {
+      color: #f92672;
+    }
+    .terminal-code .type {
+      color: #66d9ef;
+    }
+    .terminal-code .string {
+      color: #a6e22e;
+    }
+    .terminal-code .property {
+      color: #e0e0e0;
+    }
+
     .github-activity {
       margin-top: 30px;
       padding-top: 20px;
@@ -121,13 +216,14 @@
     /* Dark mode toggle */
     .theme-toggle {
       position: fixed;
-      bottom: 20px;
+      bottom: 35px;
       left: 20px;
       border: none;
       background: none;
       cursor: pointer;
       padding: 0;
       transition: all 0.3s ease;
+      z-index: 1001;
     }
     .theme-toggle:hover {
       opacity: 0.6;
@@ -136,6 +232,62 @@
       width: 18px;
       height: 18px;
       fill: #333;
+    }
+
+    /* Terminal status bar */
+    .terminal-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #1a1a1a;
+      color: #00ff00;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      padding: 6px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid #333;
+      z-index: 1000;
+    }
+    .terminal-bar-left, .terminal-bar-right {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    .terminal-segment {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .terminal-prompt {
+      color: #00ff00;
+    }
+    .terminal-path {
+      color: #66d9ef;
+    }
+    .terminal-branch {
+      color: #f92672;
+    }
+    .terminal-status {
+      color: #a6e22e;
+    }
+    .terminal-time {
+      color: #999;
+    }
+    body.dark-mode .terminal-bar {
+      background: #0a0a0a;
+      border-top-color: #222;
+    }
+    @media (max-width: 768px) {
+      .terminal-bar {
+        font-size: 10px;
+        padding: 4px 10px;
+      }
+      .terminal-bar-left, .terminal-bar-right {
+        gap: 10px;
+      }
     }
 
     /* Dark mode styles */
@@ -185,6 +337,25 @@
     body.dark-mode .motion-container svg path:not(#motion-path) {
       stroke: #333333;
     }
+    body.dark-mode .tab-nav {
+      border-bottom-color: #333;
+    }
+    body.dark-mode .tab-button {
+      color: #999;
+    }
+    body.dark-mode .tab-button:hover {
+      color: #e0e0e0;
+    }
+    body.dark-mode .tab-button.active {
+      color: #e0e0e0;
+      border-bottom-color: #e0e0e0;
+    }
+    body.dark-mode .terminal-code {
+      background: #0a0a0a;
+    }
+    body.dark-mode .content-header {
+      background: #1a1a1a;
+    }
 
     /* Motion path container */
     .motion-container {
@@ -193,10 +364,20 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
+      z-index: 2;
     }
     .motion-container svg {
       width: 400px;
       height: 400px;
+    }
+    #particle-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
     }
     body.dark-mode .animation-panel {
       background: #0a0a0a;
@@ -204,6 +385,30 @@
   </style>
 </head>
 <body>
+  <!-- Terminal status bar -->
+  <div class="terminal-bar">
+    <div class="terminal-bar-left">
+      <div class="terminal-segment">
+        <span class="terminal-prompt">$</span>
+        <span class="terminal-path">~/robert-laurella</span>
+        <span class="terminal-branch">[main]</span>
+      </div>
+      <div class="terminal-segment">
+        <span class="terminal-status">✓ synced</span>
+      </div>
+    </div>
+    <div class="terminal-bar-right">
+      <div class="terminal-segment">
+        <span class="terminal-time" id="terminal-time"></span>
+      </div>
+      <div class="terminal-segment">
+        <span style="color: #999;">press</span>
+        <span style="color: #f92672;">'d'</span>
+        <span style="color: #999;">for dark mode</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Dark mode toggle -->
   <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
     <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -216,38 +421,84 @@
 
   <div class="content">
     <div class="content-inner">
-      <h1>Robert Laurella</h1>
-      <p>Hi! I'm Robert, Director of Product Marketing at <a href=https://botpress.com>Botpress</a>, an artificial intelligence startup.
+      <div class="content-header">
+        <h1>Robert Laurella</h1>
+
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+          <button class="tab-button active" data-tab="home">Home</button>
+          <button class="tab-button" data-tab="about">About</button>
+        </div>
+      </div>
+
+      <div class="tab-content-wrapper">
+        <!-- Home Tab -->
+        <div class="tab-content active" id="home-tab">
+        <p>Hi! I'm Robert, Director of Product Marketing at <a href=https://botpress.com>Botpress</a>, an artificial intelligence startup.
 
 <br><br>
 
 I hold a PhD in English from the University of Oxford, an MA from the University of Toronto, and a BA (hons.) from McGill University. In my work, I use the skills I developed throughout my academic career to translate complex engineering into thoughtful product marketing initiatives and go-to-market strategies.
 </p>
 
-      <div class="social-links">
-        <a href="https://www.linkedin.com/in/robertlaurella/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-          </svg>
-        </a>
+        <div class="social-links">
+          <a href="https://www.linkedin.com/in/robertlaurella/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
+          </a>
 
-        <a href="https://github.com/LaurellaRobert" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-          </svg>
-        </a>
+          <a href="https://github.com/LaurellaRobert" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+          </a>
+        </div>
+
+        <div class="github-activity">
+          <h2>Recent GitHub Activity</h2>
+          <ul class="activity-list" id="github-activity">
+            <li class="activity-item">Loading...</li>
+          </ul>
+        </div>
       </div>
 
-      <div class="github-activity">
-        <h2>Recent GitHub Activity</h2>
-        <ul class="activity-list" id="github-activity">
-          <li class="activity-item">Loading...</li>
-        </ul>
+        <!-- About Tab -->
+        <div class="tab-content" id="about-tab">
+          <div class="terminal-code">
+<span class="comment">// robertLaurella.ts</span>
+<span class="keyword">interface</span> <span class="type">Skills</span> {
+  <span class="property">productMarketing</span>: <span class="type">string</span>[];
+  <span class="property">technical</span>: <span class="type">string</span>[];
+  <span class="property">interests</span>: <span class="type">string</span>[];
+}
+<span class="keyword">const</span> <span class="property">robertLaurella</span>: <span class="type">Skills</span> = {
+
+  <span class="property">productMarketing</span>: [
+    <span class="string">"Go-to-market strategy"</span>,
+    <span class="string">"Product positioning"</span>,
+    <span class="string">"Developer relations"</span>,
+  ],
+  <span class="property">technical</span>: [
+    <span class="string">"LLM orchestration & agent workflows"</span>,
+    <span class="string">"API design & documentation"</span>,
+    <span class="string">"TypeScript/JavaScript"</span>,
+  ],
+  <span class="property">interests</span>: [
+    <span class="string">"Building good software"</span>,
+    <span class="string">"Developer experience"</span>,
+    <span class="string">"Technical storytelling"</span>
+  ]
+};
+<span class="keyword">export default</span> robertLaurella;
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <div class="animation-panel">
+    <canvas id="particle-canvas"></canvas>
     <div class="motion-container">
       <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
         <!-- Define gradient for multicolored line -->
@@ -412,6 +663,26 @@ I hold a PhD in English from the University of Oxford, an MA from the University
     </script>
 
     <script>
+      // Tab switching
+      const tabButtons = document.querySelectorAll('.tab-button');
+      const tabContents = document.querySelectorAll('.tab-content');
+
+      tabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const targetTab = button.getAttribute('data-tab');
+
+          // Remove active class from all buttons and contents
+          tabButtons.forEach(btn => btn.classList.remove('active'));
+          tabContents.forEach(content => content.classList.remove('active'));
+
+          // Add active class to clicked button and corresponding content
+          button.classList.add('active');
+          document.getElementById(`${targetTab}-tab`).classList.add('active');
+        });
+      });
+    </script>
+
+    <script>
       // Console easter egg for the curious
       console.log('%c\n' +
         '  ╔═══════════════════════════════════════════════════════════════════════════════╗\n' +
@@ -433,8 +704,24 @@ I hold a PhD in English from the University of Oxford, an MA from the University
       console.log('%c\n⌨️  Interactive Easter Eggs:', 'font-size: 12px; color: #9999ff; font-weight: bold;');
       console.log('%c   • Press "d" to toggle dark mode', 'font-size: 11px; color: #666;');
       console.log('%c   • Click the diamond animation to spawn colorful tracers (max 10)', 'font-size: 11px; color: #666;');
+      console.log('%c   • Check out the terminal status bar at the bottom', 'font-size: 11px; color: #666;');
       console.log('%c\n💬 Let\'s chat: robert.laurella@gmail.com or DM me on LinkedIn', 'font-size: 13px; color: #333; font-weight: bold;');
       console.log('%c\n💡 "The best products come from people who can speak both languages: engineering and human."', 'font-size: 12px; color: #999; font-style: italic;');
+    </script>
+
+    <script>
+      // Terminal status bar - Update time
+      function updateTerminalTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+        document.getElementById('terminal-time').textContent = `${timeString} Montreal`;
+      }
+      updateTerminalTime();
+      setInterval(updateTerminalTime, 1000);
     </script>
 
     <script>
@@ -534,6 +821,9 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         }, 15000);
       }
 
+      // Expose createTracer for particle-to-tracer conversion
+      window.createDiamondTracer = createTracer;
+
       // Click to add tracers
       animationPanel.addEventListener('click', (e) => {
         if (additionalTracers.length < maxTracers) {
@@ -559,6 +849,273 @@ I hold a PhD in English from the University of Oxford, an MA from the University
           { to: -pathLength, duration: 8000, ease: 'linear' }  // Erase
         ],
         loop: true
+      });
+    </script>
+
+    <script>
+      // Particle Network Animation
+      const canvas = document.getElementById('particle-canvas');
+      const ctx = canvas.getContext('2d');
+      const particlePanel = document.querySelector('.animation-panel');
+      const diamondPath = document.querySelector('#motion-path');
+      const svg = document.querySelector('.motion-container svg');
+
+      let particles = [];
+      let mouse = { x: null, y: null, radius: 150 };
+
+      // Get SVG viewBox dimensions for coordinate conversion
+      const viewBox = svg.viewBox.baseVal;
+      const svgWidth = viewBox.width;
+      const svgHeight = viewBox.height;
+
+      // Resize canvas
+      function resizeCanvas() {
+        canvas.width = particlePanel.offsetWidth;
+        canvas.height = particlePanel.offsetHeight;
+      }
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      // Particle colors matching gradient
+      const colors = ['#9999ff', '#ff99cc', '#ffcc99', '#99ffcc', '#cc99ff', '#99ccff'];
+
+      // Conversion effect particles
+      let conversionEffects = [];
+
+      class ConversionEffect {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.particles = [];
+
+          // Create burst particles
+          for (let i = 0; i < 12; i++) {
+            const angle = (Math.PI * 2 * i) / 12;
+            this.particles.push({
+              x: x,
+              y: y,
+              vx: Math.cos(angle) * 3,
+              vy: Math.sin(angle) * 3,
+              life: 1.0,
+              color: colors[Math.floor(Math.random() * colors.length)]
+            });
+          }
+        }
+
+        update() {
+          this.particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vx *= 0.95;
+            p.vy *= 0.95;
+            p.life -= 0.05;
+          });
+          return this.particles.some(p => p.life > 0);
+        }
+
+        draw() {
+          this.particles.forEach(p => {
+            if (p.life > 0) {
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+              ctx.fillStyle = p.color.replace(')', `, ${p.life})`).replace('rgb', 'rgba');
+              ctx.fill();
+            }
+          });
+        }
+      }
+
+      // Particle class
+      class Particle {
+        constructor() {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * canvas.height;
+          this.vx = (Math.random() - 0.5) * 0.5;
+          this.vy = (Math.random() - 0.5) * 0.5;
+          this.radius = Math.random() * 2 + 1;
+          this.color = colors[Math.floor(Math.random() * colors.length)];
+          this.locked = false;
+        }
+
+        update() {
+          let shouldConvert = false;
+
+          // Mouse interaction
+          if (mouse.x !== null && mouse.y !== null) {
+            const dx = mouse.x - this.x;
+            const dy = mouse.y - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < mouse.radius || this.locked) {
+              this.locked = true; // Lock particle to cursor
+
+              // Always attract locked particles toward cursor
+              const angle = Math.atan2(dy, dx);
+              const attractionStrength = 0.15;
+              this.vx += Math.cos(angle) * attractionStrength;
+              this.vy += Math.sin(angle) * attractionStrength;
+
+              // Check if particle is near the diamond path
+              if (this.isNearDiamond()) {
+                shouldConvert = true;
+              }
+            }
+          } else {
+            // Mouse left - unlock particle
+            this.locked = false;
+          }
+
+          // Move particle
+          this.x += this.vx;
+          this.y += this.vy;
+
+          // Damping
+          this.vx *= 0.98;
+          this.vy *= 0.98;
+
+          // Bounce off edges
+          if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+          if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+
+          // Keep in bounds
+          this.x = Math.max(0, Math.min(canvas.width, this.x));
+          this.y = Math.max(0, Math.min(canvas.height, this.y));
+
+          return shouldConvert;
+        }
+
+        isNearDiamond() {
+          // Convert canvas coordinates to SVG coordinates
+          const svgRect = svg.getBoundingClientRect();
+          const canvasRect = canvas.getBoundingClientRect();
+
+          // Get position relative to SVG
+          const relativeX = this.x + canvasRect.left - svgRect.left;
+          const relativeY = this.y + canvasRect.top - svgRect.top;
+
+          // Convert to SVG coordinate space
+          const svgX = (relativeX / svgRect.width) * svgWidth;
+          const svgY = (relativeY / svgRect.height) * svgHeight;
+
+          // Check distance to path center (200, 200) with diamond bounds
+          const centerX = 200;
+          const centerY = 200;
+          const distToCenter = Math.sqrt((svgX - centerX) ** 2 + (svgY - centerY) ** 2);
+
+          // Diamond roughly spans 150 units from center - 2 unit tolerance
+          return Math.abs(distToCenter - 150) < 2;
+        }
+
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+          ctx.fillStyle = this.color;
+          ctx.fill();
+        }
+      }
+
+      // Initialize particles
+      function initParticles() {
+        particles = [];
+        const particleCount = Math.floor((canvas.width * canvas.height) / 15000);
+        for (let i = 0; i < particleCount; i++) {
+          particles.push(new Particle());
+        }
+      }
+      initParticles();
+
+      // Connect particles
+      function connectParticles() {
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < 120) {
+              const opacity = 1 - (distance / 120);
+              ctx.strokeStyle = `rgba(153, 153, 255, ${opacity * 0.3})`;
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.stroke();
+            }
+          }
+
+          // Connect to mouse
+          if (mouse.x !== null && mouse.y !== null) {
+            const dx = particles[i].x - mouse.x;
+            const dy = particles[i].y - mouse.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Show connection if within radius OR if particle is locked
+            if (distance < mouse.radius || particles[i].locked) {
+              const opacity = particles[i].locked ? 0.7 : (1 - (distance / mouse.radius)) * 0.5;
+              ctx.strokeStyle = `rgba(153, 153, 255, ${opacity})`;
+              ctx.lineWidth = particles[i].locked ? 2.5 : 2;
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(mouse.x, mouse.y);
+              ctx.stroke();
+            }
+          }
+        }
+      }
+
+      // Animation loop
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Update particles and check for conversions
+        particles = particles.filter(particle => {
+          const shouldConvert = particle.update();
+
+          if (shouldConvert) {
+            // Create conversion effect
+            conversionEffects.push(new ConversionEffect(particle.x, particle.y));
+
+            // Convert particle to tracer
+            if (window.createDiamondTracer) {
+              window.createDiamondTracer(0);
+              console.log('💫 Particle converted to tracer!');
+            }
+            return false; // Remove this particle
+          }
+
+          particle.draw();
+          return true; // Keep this particle
+        });
+
+        connectParticles();
+
+        // Update and draw conversion effects
+        conversionEffects = conversionEffects.filter(effect => {
+          const isAlive = effect.update();
+          effect.draw();
+          return isAlive;
+        });
+
+        requestAnimationFrame(animate);
+      }
+      animate();
+
+      // Mouse move event
+      particlePanel.addEventListener('mousemove', (e) => {
+        const rect = particlePanel.getBoundingClientRect();
+        mouse.x = e.clientX - rect.left;
+        mouse.y = e.clientY - rect.top;
+      });
+
+      particlePanel.addEventListener('mouseleave', () => {
+        mouse.x = null;
+        mouse.y = null;
+      });
+
+      // Reinitialize on resize
+      window.addEventListener('resize', () => {
+        resizeCanvas();
+        initParticles();
       });
     </script>
 
