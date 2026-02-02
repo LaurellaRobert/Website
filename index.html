@@ -70,13 +70,62 @@
     @media (max-width: 1024px) {
       body {
         flex-direction: column;
+        height: auto;
+        overflow-x: hidden;
+        overflow-y: auto;
       }
-      .animation-panel {
-        min-height: 400px;
-        position: relative;
+      .content {
+        flex: none;
+        order: 2;
+        width: 100%;
+        overflow: visible;
       }
       .content-inner {
-        padding: 40px 40px;
+        width: 100%;
+        max-width: 100%;
+        padding: 30px 20px 80px;
+        height: auto;
+        box-sizing: border-box;
+      }
+      .content-header {
+        position: static;
+        background: white;
+      }
+      body.dark-mode .content-header {
+        background: #1a1a1a;
+      }
+      .tab-content-wrapper {
+        position: relative;
+        flex: none;
+      }
+      .tab-content {
+        position: relative;
+        top: auto;
+        left: auto;
+        right: auto;
+        opacity: 0;
+        visibility: hidden;
+        height: 0;
+        overflow: hidden;
+        display: block;
+      }
+      .tab-content.active {
+        opacity: 1;
+        visibility: visible;
+        height: auto;
+        overflow: visible;
+      }
+      .animation-panel {
+        flex: none;
+        order: 1;
+        min-height: 280px;
+        height: 280px;
+        position: relative;
+        width: 100%;
+      }
+      .motion-container svg {
+        width: 220px;
+        height: 220px;
       }
     }
     .social-links {
@@ -284,10 +333,29 @@
     @media (max-width: 768px) {
       .terminal-bar {
         font-size: 10px;
-        padding: 4px 10px;
+        padding: 6px 12px;
+        flex-wrap: wrap;
+        gap: 4px;
       }
       .terminal-bar-left, .terminal-bar-right {
-        gap: 10px;
+        gap: 8px;
+      }
+      .terminal-bar-right .terminal-segment:last-child {
+        display: none;
+      }
+    }
+    @media (max-width: 480px) {
+      .terminal-bar {
+        font-size: 9px;
+        padding: 8px 10px;
+        justify-content: center;
+      }
+      .terminal-bar-left {
+        width: 100%;
+        justify-content: center;
+      }
+      .terminal-bar-right {
+        display: none;
       }
     }
 
@@ -408,6 +476,13 @@
     }
     body.dark-mode .animation-panel {
       background: #0a0a0a;
+    }
+    @media (max-width: 1024px) {
+      .conversion-counter {
+        bottom: 10px;
+        right: 10px;
+        font-size: 10px;
+      }
     }
 
     /* Projects styles */
