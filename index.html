@@ -4,6 +4,7 @@
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="favicon.png">
   <title>Robert Laurella</title>
   <style>
     body {
@@ -370,6 +371,13 @@
     .motion-container svg {
       width: 400px;
       height: 400px;
+      overflow: visible;
+    }
+    #diamond-group {
+      transform-origin: 200px 200px;
+    }
+    .tracer, .additional-tracer {
+      will-change: transform;
     }
     #particle-canvas {
       position: absolute;
@@ -379,8 +387,150 @@
       height: 100%;
       z-index: 1;
     }
+    .conversion-counter {
+      position: absolute;
+      bottom: 40px;
+      right: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: #999;
+      z-index: 10;
+    }
+    .conversion-counter .counter-value {
+      color: #9999ff;
+      font-weight: 500;
+    }
+    body.dark-mode .conversion-counter {
+      color: #666;
+    }
+    body.dark-mode .conversion-counter .counter-value {
+      color: #9999ff;
+    }
     body.dark-mode .animation-panel {
       background: #0a0a0a;
+    }
+
+    /* Projects styles */
+    .projects-header {
+      margin-bottom: 24px;
+    }
+    .projects-header p {
+      font-size: 14px;
+      color: #666;
+      margin: 0;
+      line-height: 1.5;
+    }
+    .projects-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      padding: 4px;
+      padding-bottom: 40px;
+    }
+    .project-card {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-left: 3px solid #9999ff;
+      border-radius: 8px;
+      padding: 28px 28px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, border-left-color 0.2s ease;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+    }
+    .project-card:hover {
+      border-color: #999;
+      border-left-color: #7777dd;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .project-card:hover .project-arrow {
+      transform: translateX(4px);
+      color: #7777dd;
+    }
+    .project-card:focus {
+      outline: 2px solid #333;
+      outline-offset: 2px;
+    }
+    .project-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .project-card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+    }
+    .project-arrow {
+      color: #bbb;
+      font-size: 16px;
+      transition: transform 0.2s ease, color 0.2s ease;
+      flex-shrink: 0;
+    }
+    .project-desc {
+      font-size: 14px;
+      color: #555;
+      margin: 0;
+      line-height: 1.6;
+      padding-right: 8px;
+    }
+    .project-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+      padding-top: 16px;
+      border-top: 1px solid #e8e8e8;
+    }
+    .project-tag {
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+      color: #666;
+      background: #efefef;
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    /* Dark mode for projects */
+    body.dark-mode .projects-header p {
+      color: #999;
+    }
+    body.dark-mode .project-card {
+      background: #1a1a1a;
+      border-color: #333;
+      border-left-color: #7777bb;
+    }
+    body.dark-mode .project-card:hover {
+      border-color: #555;
+      border-left-color: #9999ff;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+    body.dark-mode .project-card:hover .project-arrow {
+      color: #9999ff;
+    }
+    body.dark-mode .project-card:focus {
+      outline-color: #e0e0e0;
+    }
+    body.dark-mode .project-card-title {
+      color: #e0e0e0;
+    }
+    body.dark-mode .project-arrow {
+      color: #555;
+    }
+    body.dark-mode .project-desc {
+      color: #999;
+    }
+    body.dark-mode .project-tags {
+      border-top-color: #333;
+    }
+    body.dark-mode .project-tag {
+      background: #252525;
+      color: #888;
     }
   </style>
 </head>
@@ -428,6 +578,7 @@
         <div class="tab-nav">
           <button class="tab-button active" data-tab="home">Home</button>
           <button class="tab-button" data-tab="about">About</button>
+          <button class="tab-button" data-tab="projects">Projects</button>
         </div>
       </div>
 
@@ -481,16 +632,42 @@ I hold a PhD in English from the University of Oxford, an MA from the University
   ],
   <span class="property">technical</span>: [
     <span class="string">"LLM orchestration & agent workflows"</span>,
-    <span class="string">"API design & documentation"</span>,
+    <span class="string">"Web app & live service management"</span>,
     <span class="string">"TypeScript/JavaScript"</span>,
   ],
   <span class="property">interests</span>: [
     <span class="string">"Building good software"</span>,
-    <span class="string">"Developer experience"</span>,
+    <span class="string">"MMORPGs"</span>,
     <span class="string">"Technical storytelling"</span>
   ]
 };
 <span class="keyword">export default</span> robertLaurella;
+          </div>
+        </div>
+
+        <!-- Projects Tab -->
+        <div class="tab-content" id="projects-tab">
+          <div class="projects-header">
+            <p>Small apps to test ideas and sharpen implementation.</p>
+          </div>
+          <div class="projects-grid">
+
+            <a href="https://shouldihaveacupof.coffee/" target="_blank" rel="noopener noreferrer" class="project-card">
+              <div class="project-header">
+                <h3 class="project-card-title">Should I Have a Cup of Coffee?</h3>
+                <span class="project-arrow">→</span>
+              </div>
+              <p class="project-desc">A site with more engineering than it needs: a zero-dependency experiment in canvas pixel detection, procedural particle systems, and parallax animation, built to see how far browser fundamentals can go.</p>
+              <div class="project-tags">
+                <span class="project-tag">LocalStorage</span>
+                <span class="project-tag">Canvas API</span>
+                <span class="project-tag">CSS Animations</span>
+                <span class="project-tag">requestAnimationFrame</span>
+                <span class="project-tag">Procedural Animation</span>
+                <span class="project-tag">Pixel Manipulation</span>
+              </div>
+            </a>
+
           </div>
         </div>
       </div>
@@ -498,35 +675,64 @@ I hold a PhD in English from the University of Oxford, an MA from the University
   </div>
 
   <div class="animation-panel">
+    <div class="conversion-counter" id="conversion-counter">
+      <span class="counter-value">0</span> captured
+    </div>
     <canvas id="particle-canvas"></canvas>
     <div class="motion-container">
       <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-        <!-- Define gradient for multicolored line -->
         <defs>
+          <!-- Glow filter for tracers -->
+          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+
+          <!-- Stronger glow for the diamond path -->
+          <filter id="path-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+
+          <!-- Animated gradient for color cycling -->
           <linearGradient id="rainbow-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" style="stop-color:#9999ff;stop-opacity:1" />
-            <stop offset="25%" style="stop-color:#ff99cc;stop-opacity:1" />
-            <stop offset="50%" style="stop-color:#ffcc99;stop-opacity:1" />
-            <stop offset="75%" style="stop-color:#99ffcc;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#9999ff;stop-opacity:1" />
+            <stop id="grad-stop-0" offset="0%" style="stop-color:#9999ff;stop-opacity:1" />
+            <stop id="grad-stop-1" offset="25%" style="stop-color:#ff99cc;stop-opacity:1" />
+            <stop id="grad-stop-2" offset="50%" style="stop-color:#ffcc99;stop-opacity:1" />
+            <stop id="grad-stop-3" offset="75%" style="stop-color:#99ffcc;stop-opacity:1" />
+            <stop id="grad-stop-4" offset="100%" style="stop-color:#9999ff;stop-opacity:1" />
           </linearGradient>
         </defs>
 
-        <!-- Base grey diamond (always visible) -->
-        <path
-          d="M 200 50 Q 210 140, 320 200 Q 210 260, 200 350 Q 190 260, 80 200 Q 190 140, 200 50 Z"
-          stroke="#cccccc"
-          stroke-width="3"
-          fill="none"
-          opacity="0.3"/>
+        <!-- Container for breathing animation -->
+        <g id="diamond-group" transform-origin="200 200">
+          <!-- Base grey diamond (always visible) -->
+          <path
+            d="M 200 50 Q 210 140, 320 200 Q 210 260, 200 350 Q 190 260, 80 200 Q 190 140, 200 50 Z"
+            stroke="#cccccc"
+            stroke-width="3"
+            fill="none"
+            opacity="0.3"/>
 
-        <!-- Colored diamond that gets revealed -->
-        <path id="motion-path"
-          d="M 200 50 Q 210 140, 320 200 Q 210 260, 200 350 Q 190 260, 80 200 Q 190 140, 200 50 Z"
-          stroke="url(#rainbow-gradient)"
-          stroke-width="3"
-          fill="none"
-          opacity="0.8"/>
+          <!-- Colored diamond that gets revealed -->
+          <path id="motion-path"
+            d="M 200 50 Q 210 140, 320 200 Q 210 260, 200 350 Q 190 260, 80 200 Q 190 140, 200 50 Z"
+            stroke="url(#rainbow-gradient)"
+            stroke-width="3"
+            fill="none"
+            opacity="0.8"
+            filter="url(#path-glow)"/>
+        </g>
+
+        <!-- Trail container (trails rendered here) -->
+        <g id="trail-container"></g>
 
         <!-- The tracer element -->
         <circle class="tracer" cx="0" cy="0" r="6" fill="#9999ff"/>
@@ -776,12 +982,127 @@ I hold a PhD in English from the University of Oxford, an MA from the University
       const pathLength = path.getTotalLength();
       const svgElement = document.querySelector('.motion-container svg');
       const animationPanel = document.querySelector('.animation-panel');
+      const trailContainer = document.querySelector('#trail-container');
+      const mainTracer = document.querySelector('.tracer');
 
       // Set up stroke-dasharray and initial dashoffset
       path.style.strokeDasharray = pathLength;
       path.style.strokeDashoffset = pathLength;
 
-      // Additional tracers management
+      // ========================================
+      // 1. COLOR CYCLING - Slow gradient shift
+      // ========================================
+      const gradientColors = [
+        ['#9999ff', '#ff99cc', '#ffcc99', '#99ffcc', '#9999ff'],
+        ['#ff99cc', '#ffcc99', '#99ffcc', '#9999ff', '#ff99cc'],
+        ['#ffcc99', '#99ffcc', '#9999ff', '#ff99cc', '#ffcc99'],
+        ['#99ffcc', '#9999ff', '#ff99cc', '#ffcc99', '#99ffcc'],
+      ];
+
+      let colorPhase = 0;
+      function cycleColors() {
+        const stops = document.querySelectorAll('[id^="grad-stop-"]');
+        const currentColors = gradientColors[Math.floor(colorPhase) % gradientColors.length];
+        const nextColors = gradientColors[Math.floor(colorPhase + 1) % gradientColors.length];
+        const blend = colorPhase % 1;
+
+        stops.forEach((stop, i) => {
+          const current = currentColors[i];
+          const next = nextColors[i];
+          // Simple color interpolation
+          const blended = blendColors(current, next, blend);
+          stop.style.stopColor = blended;
+        });
+
+        colorPhase += 0.002; // Slow cycle
+        requestAnimationFrame(cycleColors);
+      }
+
+      function blendColors(c1, c2, t) {
+        const r1 = parseInt(c1.slice(1, 3), 16);
+        const g1 = parseInt(c1.slice(3, 5), 16);
+        const b1 = parseInt(c1.slice(5, 7), 16);
+        const r2 = parseInt(c2.slice(1, 3), 16);
+        const g2 = parseInt(c2.slice(3, 5), 16);
+        const b2 = parseInt(c2.slice(5, 7), 16);
+        const r = Math.round(r1 + (r2 - r1) * t);
+        const g = Math.round(g1 + (g2 - g1) * t);
+        const b = Math.round(b1 + (b2 - b1) * t);
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+      }
+
+      cycleColors();
+
+      // ========================================
+      // 2. BREATHING - Subtle scale pulse
+      // ========================================
+      animate('#diamond-group', {
+        scale: [1, 1.02, 1],
+        duration: 4000,
+        ease: 'easeInOutSine',
+        loop: true
+      });
+
+      // ========================================
+      // 3. TRACER TRAILS - Fading comet tails
+      // ========================================
+      const trails = [];
+      const maxTrailLength = 12;
+      const trailInterval = 50; // ms between trail dots
+
+      function createTrailDot(x, y, color, size = 4) {
+        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        dot.setAttribute('cx', x);
+        dot.setAttribute('cy', y);
+        dot.setAttribute('r', size);
+        dot.setAttribute('fill', color);
+        dot.setAttribute('opacity', '0.6');
+        trailContainer.appendChild(dot);
+        return dot;
+      }
+
+      // Trail system for main tracer
+      let lastTrailTime = 0;
+      const mainTrail = [];
+
+      function updateMainTrail() {
+        const now = Date.now();
+        if (now - lastTrailTime > trailInterval) {
+          const transform = mainTracer.getAttribute('transform');
+          if (transform) {
+            const match = transform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+            if (match) {
+              const x = parseFloat(match[1]);
+              const y = parseFloat(match[2]);
+              const dot = createTrailDot(x, y, '#9999ff', 4);
+              mainTrail.push({ element: dot, opacity: 0.6 });
+
+              // Limit trail length
+              if (mainTrail.length > maxTrailLength) {
+                const old = mainTrail.shift();
+                old.element.remove();
+              }
+            }
+          }
+          lastTrailTime = now;
+        }
+
+        // Fade out trail dots
+        mainTrail.forEach((dot, i) => {
+          const targetOpacity = (i / mainTrail.length) * 0.5;
+          dot.element.setAttribute('opacity', targetOpacity);
+          const scale = 0.3 + (i / mainTrail.length) * 0.7;
+          dot.element.setAttribute('r', 4 * scale);
+        });
+
+        requestAnimationFrame(updateMainTrail);
+      }
+
+      updateMainTrail();
+
+      // ========================================
+      // ADDITIONAL TRACERS with trails
+      // ========================================
       const additionalTracers = [];
       const maxTracers = 10;
       const tracerColors = ['#9999ff', '#ff99cc', '#ffcc99', '#99ffcc', '#cc99ff', '#99ccff'];
@@ -795,6 +1116,40 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         tracer.setAttribute('opacity', 0.9);
         svgElement.appendChild(tracer);
 
+        const tracerTrail = [];
+        let tracerLastTrailTime = 0;
+
+        // Trail update for this tracer
+        const trailUpdater = () => {
+          const now = Date.now();
+          if (now - tracerLastTrailTime > trailInterval) {
+            const transform = tracer.getAttribute('transform');
+            if (transform) {
+              const match = transform.match(/translate\(([^,]+),\s*([^)]+)\)/);
+              if (match) {
+                const x = parseFloat(match[1]);
+                const y = parseFloat(match[2]);
+                const dot = createTrailDot(x, y, color, 3);
+                tracerTrail.push({ element: dot, opacity: 0.5 });
+
+                if (tracerTrail.length > 8) {
+                  const old = tracerTrail.shift();
+                  old.element.remove();
+                }
+              }
+            }
+            tracerLastTrailTime = now;
+          }
+
+          // Fade trail
+          tracerTrail.forEach((dot, i) => {
+            const targetOpacity = (i / tracerTrail.length) * 0.4;
+            dot.element.setAttribute('opacity', targetOpacity);
+            const scale = 0.3 + (i / tracerTrail.length) * 0.7;
+            dot.element.setAttribute('r', 3 * scale);
+          });
+        };
+
         const animation = animate(tracer, {
           ease: 'linear',
           duration: 8000,
@@ -803,10 +1158,14 @@ I hold a PhD in English from the University of Oxford, an MA from the University
           ...svg.createMotionPath('#motion-path')
         });
 
+        const trailIntervalId = setInterval(trailUpdater, 16);
+
         additionalTracers.push({
           element: tracer,
           animation: animation,
           color: color,
+          trail: tracerTrail,
+          trailIntervalId: trailIntervalId,
           createdAt: Date.now()
         });
 
@@ -814,7 +1173,10 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         setTimeout(() => {
           const index = additionalTracers.findIndex(t => t.element === tracer);
           if (index !== -1) {
-            animation.pause();
+            const t = additionalTracers[index];
+            clearInterval(t.trailIntervalId);
+            t.animation.pause();
+            t.trail.forEach(dot => dot.element.remove());
             tracer.remove();
             additionalTracers.splice(index, 1);
           }
@@ -827,7 +1189,7 @@ I hold a PhD in English from the University of Oxford, an MA from the University
       // Click to add tracers
       animationPanel.addEventListener('click', (e) => {
         if (additionalTracers.length < maxTracers) {
-          createTracer(0); // Start immediately
+          createTracer(0);
           console.log('✨ Tracer spawned! Click to add more (max 10)');
         } else {
           console.log('⚠️ Max tracers reached (10)');
@@ -845,8 +1207,8 @@ I hold a PhD in English from the University of Oxford, an MA from the University
       // Create reveal and erase effect
       animate('#motion-path', {
         strokeDashoffset: [
-          { to: 0, duration: 8000, ease: 'linear' },          // Reveal
-          { to: -pathLength, duration: 8000, ease: 'linear' }  // Erase
+          { to: 0, duration: 8000, ease: 'linear' },
+          { to: -pathLength, duration: 8000, ease: 'linear' }
         ],
         loop: true
       });
@@ -878,6 +1240,16 @@ I hold a PhD in English from the University of Oxford, an MA from the University
 
       // Particle colors matching gradient
       const colors = ['#9999ff', '#ff99cc', '#ffcc99', '#99ffcc', '#cc99ff', '#99ccff'];
+
+      // Conversion counter
+      let conversionCount = 0;
+      const counterElement = document.getElementById('conversion-counter');
+      const counterValue = counterElement.querySelector('.counter-value');
+
+      function updateConversionCounter() {
+        conversionCount++;
+        counterValue.textContent = conversionCount;
+      }
 
       // Conversion effect particles
       let conversionEffects = [];
@@ -1014,15 +1386,54 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         }
       }
 
+      // Target particle count
+      function getTargetParticleCount() {
+        return Math.floor((canvas.width * canvas.height) / 15000);
+      }
+
       // Initialize particles
       function initParticles() {
         particles = [];
-        const particleCount = Math.floor((canvas.width * canvas.height) / 15000);
+        const particleCount = getTargetParticleCount();
         for (let i = 0; i < particleCount; i++) {
           particles.push(new Particle());
         }
       }
       initParticles();
+
+      // Respawn particles from edges
+      function spawnParticleFromEdge() {
+        const particle = new Particle();
+        // Spawn from a random edge
+        const edge = Math.floor(Math.random() * 4);
+        switch (edge) {
+          case 0: // Top
+            particle.x = Math.random() * canvas.width;
+            particle.y = 0;
+            particle.vy = Math.random() * 0.5 + 0.2;
+            break;
+          case 1: // Right
+            particle.x = canvas.width;
+            particle.y = Math.random() * canvas.height;
+            particle.vx = -(Math.random() * 0.5 + 0.2);
+            break;
+          case 2: // Bottom
+            particle.x = Math.random() * canvas.width;
+            particle.y = canvas.height;
+            particle.vy = -(Math.random() * 0.5 + 0.2);
+            break;
+          case 3: // Left
+            particle.x = 0;
+            particle.y = Math.random() * canvas.height;
+            particle.vx = Math.random() * 0.5 + 0.2;
+            break;
+        }
+        return particle;
+      }
+
+      // Respawn timing
+      let lastRespawnTime = 0;
+      const respawnInterval = 300; // ms between respawns
 
       // Connect particles
       function connectParticles() {
@@ -1067,6 +1478,14 @@ I hold a PhD in English from the University of Oxford, an MA from the University
       function animate() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+        // Respawn particles if below target count
+        const now = Date.now();
+        const targetCount = getTargetParticleCount();
+        if (particles.length < targetCount && now - lastRespawnTime > respawnInterval) {
+          particles.push(spawnParticleFromEdge());
+          lastRespawnTime = now;
+        }
+
         // Update particles and check for conversions
         particles = particles.filter(particle => {
           const shouldConvert = particle.update();
@@ -1078,7 +1497,7 @@ I hold a PhD in English from the University of Oxford, an MA from the University
             // Convert particle to tracer
             if (window.createDiamondTracer) {
               window.createDiamondTracer(0);
-              console.log('💫 Particle converted to tracer!');
+              updateConversionCounter();
             }
             return false; // Remove this particle
           }
@@ -1119,9 +1538,7 @@ I hold a PhD in English from the University of Oxford, an MA from the University
       });
     </script>
 
-    <script src="https://cdn.botpress.cloud/webchat/v3.5/inject.js"></script>
-<script src="https://files.bpcontent.cloud/2024/10/02/18/20241002185126-GDGQYDE6.js" defer></script>
-    
+  
     
 </body>
 </html>
