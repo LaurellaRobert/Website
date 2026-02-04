@@ -3077,6 +3077,7 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         originalInitParticles();
         resetLives();
         shootingStars = [];
+        shootingStarSpeedLevel = 0; // Reset progressive difficulty
         starburstEffects = [];
         conversionCount = 0;
         counterValue.textContent = '0';
@@ -3087,7 +3088,9 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         constructor() {
           // Random starting edge
           const edge = Math.floor(Math.random() * 4);
-          const speed = 2 + Math.random() * 2; // Faster than normal particles
+          // Progressive speed: base 2-4, increases by 0.5 per level (no cap)
+          const speedBonus = shootingStarSpeedLevel * 0.5;
+          const speed = 2 + Math.random() * 2 + speedBonus;
 
           switch (edge) {
             case 0: // Top
@@ -3279,6 +3282,7 @@ I hold a PhD in English from the University of Oxford, an MA from the University
 
       // Shooting stars array
       let shootingStars = [];
+      let shootingStarSpeedLevel = 0; // Progressive difficulty - increases with each star
 
       // Spawn shooting stars at random intervals (5-15 seconds) - only one at a time
       function scheduleNextShootingStar() {
@@ -3356,10 +3360,12 @@ I hold a PhD in English from the University of Oxford, an MA from the University
                 updateConversionCounter();
               }
             }
+            shootingStarSpeedLevel++; // Increase difficulty for next star
             return false;
           } else if (status === 'escaped') {
             // Missed it - lose a life
             loseLife();
+            shootingStarSpeedLevel++; // Increase difficulty even on miss
             return false;
           }
 
