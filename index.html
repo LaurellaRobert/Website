@@ -64,8 +64,10 @@
       justify-content: center;
       background: #f9f9f9;
       min-height: 100vh;
-      position: sticky;
-      top: 0;
+      height: 100vh;
+      position: relative;
+      padding-bottom: 35px;
+      box-sizing: border-box;
     }
     .social-links {
       margin-top: 20px;
@@ -128,6 +130,10 @@
     }
 
     /* Terminal code display */
+    .terminal-code-wrapper {
+      position: relative;
+      margin-bottom: 20px;
+    }
     .terminal-code {
       background: #1a1a1a;
       border-radius: 8px;
@@ -137,12 +143,82 @@
       line-height: 1.8;
       color: #e0e0e0;
       overflow-x: auto;
-      margin-bottom: 20px;
       min-height: 500px;
       white-space: pre;
       width: 100%;
       max-width: 100%;
       box-sizing: border-box;
+    }
+    .terminal-code-run {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 10;
+      background: transparent;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: #888;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .terminal-code-run:hover {
+      border-color: #9999ff;
+      color: #9999ff;
+    }
+    .terminal-code-run:active {
+      transform: scale(0.95);
+    }
+    .terminal-code-run.ran {
+      border-color: #a6e22e;
+      color: #a6e22e;
+    }
+    .terminal-code-run .run-icon {
+      font-size: 10px;
+    }
+    .terminal-code-toggle {
+      position: absolute;
+      top: 12px;
+      right: 80px;
+      z-index: 10;
+      background: transparent;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 6px 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: #66d9ef;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .terminal-code-toggle:hover {
+      border-color: #66d9ef;
+      background: rgba(102, 217, 239, 0.1);
+    }
+    .terminal-code-toggle.showing-js {
+      color: #a6e22e;
+    }
+    .terminal-code-toggle.showing-js:hover {
+      border-color: #a6e22e;
+      background: rgba(166, 226, 46, 0.1);
+    }
+    .terminal-code.compiling {
+      animation: compile-flash 0.8s ease-out;
+    }
+    @keyframes compile-flash {
+      0% { opacity: 1; }
+      25% { opacity: 0.6; border-color: #66d9ef; }
+      50% { opacity: 1; }
+      75% { opacity: 0.8; }
+      100% { opacity: 1; }
     }
     .terminal-code .comment {
       color: #666;
@@ -158,6 +234,36 @@
     }
     .terminal-code .property {
       color: #e0e0e0;
+    }
+    .terminal-code .expandable {
+      cursor: pointer;
+      border-bottom: 1px dashed #666;
+      transition: all 0.2s ease;
+    }
+    .terminal-code .expandable:hover {
+      border-bottom-color: #a6e22e;
+      color: #c8e6a0;
+    }
+    .terminal-code .expandable.expanded {
+      border-bottom-color: #a6e22e;
+    }
+    .terminal-code .skill-expansion {
+      color: #888;
+      font-style: italic;
+      display: block;
+      margin-left: 0;
+      padding-left: 4ch;
+      max-width: 60%;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .terminal-code .skill-expansion.visible {
+      max-height: 150px;
+      opacity: 1;
     }
 
     .github-activity {
@@ -269,6 +375,41 @@
       background: #0a0a0a;
       border-top-color: #222;
     }
+    /* Terminal input mode */
+    .terminal-bar.input-mode {
+      cursor: text;
+    }
+    .terminal-bar .terminal-input {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #e0e0e0;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      width: 200px;
+      padding: 0;
+      margin: 0;
+    }
+    .terminal-bar .terminal-input::placeholder {
+      color: #666;
+    }
+    .terminal-bar .terminal-output {
+      color: #a6e22e;
+    }
+    .terminal-bar .terminal-output.error {
+      color: #f92672;
+    }
+    .terminal-bar .terminal-output a {
+      color: #66d9ef;
+      text-decoration: none;
+    }
+    .terminal-bar .terminal-output a:hover {
+      text-decoration: underline;
+    }
+    .terminal-hint {
+      color: #666;
+      font-size: 11px;
+    }
     /* Dark mode styles */
     body.dark-mode {
       background: #1a1a1a;
@@ -373,10 +514,28 @@
       font-size: 11px;
       color: #999;
       z-index: 10;
+      transition: transform 0.2s ease;
     }
     .conversion-counter .counter-value {
       color: #9999ff;
       font-weight: 500;
+      display: inline-block;
+      min-width: 1ch;
+    }
+    .conversion-counter.pulse .counter-value {
+      animation: counter-pulse 0.4s ease-out;
+    }
+    .conversion-counter.attention {
+      animation: attention-pulse 2s ease-in-out infinite;
+    }
+    @keyframes counter-pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.4); color: #bbbbff; }
+      100% { transform: scale(1); }
+    }
+    @keyframes attention-pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
     }
     body.dark-mode .conversion-counter {
       color: #666;
@@ -386,6 +545,196 @@
     }
     body.dark-mode .animation-panel {
       background: #0a0a0a;
+    }
+    /* Pixelated hearts - Zelda style */
+    .lives-container {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+    }
+    .pixel-heart {
+      width: 16px;
+      height: 14px;
+      position: relative;
+      image-rendering: pixelated;
+      transition: transform 0.2s ease, opacity 0.3s ease;
+    }
+    .pixel-heart.lost {
+      opacity: 0.2;
+      transform: scale(0.9);
+    }
+    .pixel-heart.losing {
+      animation: heart-break 0.5s ease-out;
+    }
+    @keyframes heart-break {
+      0% { transform: scale(1); }
+      25% { transform: scale(1.3); }
+      50% { transform: scale(0.8) rotate(-10deg); }
+      75% { transform: scale(0.9) rotate(5deg); }
+      100% { transform: scale(0.9); }
+    }
+    /* CSS pixel art heart */
+    .pixel-heart::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background:
+        /* Row 1 - top bumps */
+        linear-gradient(to right, transparent 2px, #ff4444 2px, #ff4444 6px, transparent 6px, transparent 10px, #ff4444 10px, #ff4444 14px, transparent 14px) 0 0 / 16px 2px no-repeat,
+        /* Row 2 */
+        linear-gradient(to right, #ff4444 0px, #ff4444 8px, transparent 8px, transparent 8px, #ff4444 8px, #ff4444 16px) 0 2px / 16px 2px no-repeat,
+        /* Row 3 */
+        linear-gradient(to right, #ff4444 0px, #ff4444 16px) 0 4px / 16px 2px no-repeat,
+        /* Row 4 */
+        linear-gradient(to right, transparent 2px, #ff4444 2px, #ff4444 14px, transparent 14px) 0 6px / 16px 2px no-repeat,
+        /* Row 5 */
+        linear-gradient(to right, transparent 4px, #ff4444 4px, #ff4444 12px, transparent 12px) 0 8px / 16px 2px no-repeat,
+        /* Row 6 */
+        linear-gradient(to right, transparent 6px, #ff4444 6px, #ff4444 10px, transparent 10px) 0 10px / 16px 2px no-repeat,
+        /* Row 7 - bottom point */
+        linear-gradient(to right, transparent 7px, #ff4444 7px, #ff4444 9px, transparent 9px) 0 12px / 16px 2px no-repeat;
+    }
+    .pixel-heart.lost::before {
+      background:
+        linear-gradient(to right, transparent 2px, #666 2px, #666 6px, transparent 6px, transparent 10px, #666 10px, #666 14px, transparent 14px) 0 0 / 16px 2px no-repeat,
+        linear-gradient(to right, #666 0px, #666 8px, transparent 8px, transparent 8px, #666 8px, #666 16px) 0 2px / 16px 2px no-repeat,
+        linear-gradient(to right, #666 0px, #666 16px) 0 4px / 16px 2px no-repeat,
+        linear-gradient(to right, transparent 2px, #666 2px, #666 14px, transparent 14px) 0 6px / 16px 2px no-repeat,
+        linear-gradient(to right, transparent 4px, #666 4px, #666 12px, transparent 12px) 0 8px / 16px 2px no-repeat,
+        linear-gradient(to right, transparent 6px, #666 6px, #666 10px, transparent 10px) 0 10px / 16px 2px no-repeat,
+        linear-gradient(to right, transparent 7px, #666 7px, #666 9px, transparent 9px) 0 12px / 16px 2px no-repeat;
+    }
+    /* Shooting star indicator */
+    .shooting-star-alert {
+      position: absolute;
+      top: 40px;
+      right: 15px;
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      color: #ffcc00;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .shooting-star-alert.visible {
+      opacity: 1;
+      animation: warning-pulse 0.5s ease-in-out infinite;
+    }
+    @keyframes warning-pulse {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+
+    /* Game Over screen - GBA style */
+    .game-over-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #0a0a12;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    .game-over-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+    .game-over-text {
+      font-family: 'Courier New', monospace;
+      font-size: 32px;
+      font-weight: bold;
+      color: #ff4444;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      image-rendering: pixelated;
+      text-shadow:
+        4px 4px 0 #220000,
+        -1px -1px 0 #ff6666;
+    }
+    .game-over-score {
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      color: #9999ff;
+      margin-top: 20px;
+      letter-spacing: 2px;
+    }
+    .game-over-score span {
+      color: #ffcc00;
+      font-weight: bold;
+    }
+    .game-over-prompt {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: #666;
+      margin-top: 30px;
+      letter-spacing: 1px;
+    }
+    .game-over-prompt span {
+      color: #a6e22e;
+    }
+    /* Pixel art skull decoration */
+    .pixel-skull {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 20px;
+      position: relative;
+      image-rendering: pixelated;
+    }
+    .pixel-skull::before {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background:
+        /* Row 1-2: Top of skull */
+        linear-gradient(to right, transparent 12px, #e0e0e0 12px, #e0e0e0 36px, transparent 36px) 0 0 / 48px 6px no-repeat,
+        /* Row 3: Wider */
+        linear-gradient(to right, transparent 6px, #e0e0e0 6px, #e0e0e0 42px, transparent 42px) 0 6px / 48px 6px no-repeat,
+        /* Row 4-5: Full width with eyes */
+        linear-gradient(to right, transparent 6px, #e0e0e0 6px, #e0e0e0 12px, #0a0a12 12px, #0a0a12 18px, #e0e0e0 18px, #e0e0e0 30px, #0a0a12 30px, #0a0a12 36px, #e0e0e0 36px, #e0e0e0 42px, transparent 42px) 0 12px / 48px 12px no-repeat,
+        /* Row 6: Below eyes */
+        linear-gradient(to right, transparent 6px, #e0e0e0 6px, #e0e0e0 42px, transparent 42px) 0 24px / 48px 6px no-repeat,
+        /* Row 7: Nose area */
+        linear-gradient(to right, transparent 12px, #e0e0e0 12px, #e0e0e0 18px, #0a0a12 18px, #0a0a12 30px, #e0e0e0 30px, #e0e0e0 36px, transparent 36px) 0 30px / 48px 6px no-repeat,
+        /* Row 8-9: Teeth */
+        linear-gradient(to right, transparent 12px, #e0e0e0 12px, #e0e0e0 16px, #0a0a12 16px, #0a0a12 20px, #e0e0e0 20px, #e0e0e0 24px, #0a0a12 24px, #0a0a12 28px, #e0e0e0 28px, #e0e0e0 32px, #0a0a12 32px, #0a0a12 36px, transparent 36px) 0 36px / 48px 12px no-repeat;
+    }
+    .pixel-skull.animate {
+      animation: skull-bounce 0.5s ease-out;
+    }
+    @keyframes skull-bounce {
+      0% { transform: scale(0) rotate(-10deg); }
+      50% { transform: scale(1.2) rotate(5deg); }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+    /* Scanlines effect for retro feel */
+    .game-over-overlay::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+      );
+      pointer-events: none;
     }
 
     /* Projects styles */
@@ -450,6 +799,26 @@
       transition: transform 0.2s ease, color 0.2s ease;
       flex-shrink: 0;
     }
+    .project-thesis {
+      margin: 0;
+      padding-left: 12px;
+      border-left: 2px solid #9999ff;
+    }
+    .project-thesis-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #9999ff;
+      margin-bottom: 4px;
+    }
+    .project-thesis-text {
+      font-size: 13px;
+      color: #666;
+      line-height: 1.5;
+      font-style: italic;
+      margin: 0;
+    }
     .project-desc {
       font-size: 14px;
       color: #555;
@@ -499,6 +868,15 @@
     }
     body.dark-mode .project-arrow {
       color: #555;
+    }
+    body.dark-mode .project-thesis {
+      border-left-color: #7777bb;
+    }
+    body.dark-mode .project-thesis-label {
+      color: #9999ff;
+    }
+    body.dark-mode .project-thesis-text {
+      color: #888;
     }
     body.dark-mode .project-desc {
       color: #999;
@@ -628,10 +1006,8 @@
       <div class="terminal-segment">
         <span class="terminal-time" id="terminal-time"></span>
       </div>
-      <div class="terminal-segment">
-        <span style="color: #999;">press</span>
-        <span style="color: #f92672;">'d'</span>
-        <span style="color: #999;">for dark mode</span>
+      <div class="terminal-segment terminal-hint-segment">
+        <span class="terminal-hint">press <span style="color: #f92672;">/</span> to interact</span>
       </div>
     </div>
   </div>
@@ -693,8 +1069,9 @@ I hold a PhD in English from the University of Oxford, an MA from the University
 
         <!-- About Tab -->
         <div class="tab-content" id="about-tab">
-          <div class="terminal-code">
-<span class="comment">// robertLaurella.ts</span>
+          <div class="terminal-code-wrapper">
+            <button class="terminal-code-run" id="run-code-btn"><span class="run-icon">▶</span> run</button>
+            <div class="terminal-code"><span class="comment">// robertLaurella.ts</span>
 <span class="keyword">interface</span> <span class="type">Skills</span> {
   <span class="property">productMarketing</span>: <span class="type">string</span>[];
   <span class="property">technical</span>: <span class="type">string</span>[];
@@ -714,11 +1091,11 @@ I hold a PhD in English from the University of Oxford, an MA from the University
   ],
   <span class="property">interests</span>: [
     <span class="string">"Building good software"</span>,
-    <span class="string">"MMORPGs"</span>,
+    <span class="string expandable" data-skill="MMORPGs">"MMORPGs"</span>,
     <span class="string">"Technical storytelling"</span>
   ]
 };
-<span class="keyword">export default</span> robertLaurella;
+<span class="keyword">export default</span> robertLaurella;</div>
           </div>
         </div>
 
@@ -734,7 +1111,11 @@ I hold a PhD in English from the University of Oxford, an MA from the University
                 <h3 class="project-card-title">Should I Have a Cup of Coffee?</h3>
                 <span class="project-arrow">→</span>
               </div>
-              <p class="project-desc">A site with more engineering than it needs: a zero-dependency experiment in canvas pixel detection, procedural particle systems, and parallax animation, built to see how far browser fundamentals can go.</p>
+              <div class="project-thesis">
+                <div class="project-thesis-label">Thesis</div>
+                <p class="project-thesis-text">I wanted to see how far I could push vanilla JavaScript and HTML/CSS animations without having to import additional animation libraries.</p>
+              </div>
+              <p class="project-desc">A zero-dependency experiment in canvas pixel detection, procedural particle systems, and parallax animation.</p>
               <div class="project-tags">
                 <span class="project-tag">LocalStorage</span>
                 <span class="project-tag">Canvas API</span>
@@ -754,6 +1135,18 @@ I hold a PhD in English from the University of Oxford, an MA from the University
   <div class="animation-panel">
     <div class="conversion-counter" id="conversion-counter">
       <span class="counter-value">0</span> captured
+    </div>
+    <div class="lives-container" id="lives-container">
+      <div class="pixel-heart" data-heart="1"></div>
+      <div class="pixel-heart" data-heart="2"></div>
+      <div class="pixel-heart" data-heart="3"></div>
+    </div>
+    <div class="shooting-star-alert" id="shooting-star-alert">★ incoming!</div>
+    <div class="game-over-overlay" id="game-over-overlay">
+      <div class="pixel-skull" id="pixel-skull"></div>
+      <div class="game-over-text">Game Over</div>
+      <div class="game-over-score">SCORE: <span id="final-score">0</span></div>
+      <div class="game-over-prompt">press <span>/</span> then type <span>clear</span></div>
     </div>
     <canvas id="particle-canvas"></canvas>
     <div class="motion-container">
@@ -966,31 +1359,302 @@ I hold a PhD in English from the University of Oxford, an MA from the University
     </script>
 
     <script>
-      // Console easter egg for the curious
-      console.log('%c\n' +
-        '  ╔═══════════════════════════════════════════════════════════════════════════════╗\n' +
-        '  ║                                                                               ║\n' +
-        '  ║   ____        _               _     _                        _ _             ║\n' +
-        '  ║  |  _ \\ ___  | |__   ___ _ __| |_  | |    __ _ _   _ _ __ ___| | | __ _     ║\n' +
-        '  ║  | |_) / _ \\ | \'_ \\ / _ \\ \'__| __| | |   / _` | | | | \'__/ _ \\ | |/ _` |    ║\n' +
-        '  ║  |  _ < (_) || |_) |  __/ |  | |_  | |__| (_| | |_| | | |  __/ | | (_| |    ║\n' +
-        '  ║  |_| \\_\\___/ |_.__/ \\___|_|   \\__| |_____\\__,_|\\__,_|_|  \\___|_|_|\\__,_|    ║\n' +
-        '  ║                                                                               ║\n' +
-        '  ║  👋 Hello, fellow developer!                                                 ║\n' +
-        '  ║                                                                               ║\n' +
-        '  ╚═══════════════════════════════════════════════════════════════════════════════╝\n',
-        'font-family: monospace; color: #9999ff; font-size: 12px; line-height: 1.2;'
-      );
-      console.log('%cIf you\'re reading this, you\'re probably the kind of person I want to talk to.', 'font-size: 14px; color: #666; font-weight: bold;');
-      console.log('%c\n📚 PhD in English → 📈 Product Marketing → 💻 Still shipping code', 'font-size: 13px; color: #999; font-style: italic;');
-      console.log('%c\n🛠️  Tech Stack: Vanilla JS + anime.js v4 (SVG motion paths), GitHub API, deployed on Pages.', 'font-size: 12px; color: #999;');
-      console.log('%c\n⌨️  Interactive Easter Eggs:', 'font-size: 12px; color: #9999ff; font-weight: bold;');
-      console.log('%c   • Press "d" to toggle dark mode', 'font-size: 11px; color: #666;');
-      console.log('%c   • Click the diamond animation to spawn colorful tracers (max 10)', 'font-size: 11px; color: #666;');
-      console.log('%c   • Check out the terminal status bar at the bottom', 'font-size: 11px; color: #666;');
-      console.log('%c\n💬 Let\'s chat: robert.laurella@gmail.com or DM me on LinkedIn', 'font-size: 13px; color: #333; font-weight: bold;');
-      console.log('%c\n💡 "The best products come from people who can speak both languages: engineering and human."', 'font-size: 12px; color: #999; font-style: italic;');
+      // Run code button - logs robertLaurella to console
+      const runCodeBtn = document.getElementById('run-code-btn');
+
+      const robertLaurella = {
+        productMarketing: [
+          "Go-to-market strategy",
+          "Product positioning",
+          "Developer relations"
+        ],
+        technical: [
+          "LLM orchestration & agent workflows",
+          "Web app & live service management",
+          "TypeScript/JavaScript"
+        ],
+        interests: [
+          "Building good software",
+          "MMORPGs",
+          "Technical storytelling"
+        ]
+      };
+
+      // Skill descriptions for expandable content
+      const skillDescriptions = {
+        'MMORPGs': 'I like to play Final Fantasy XIV, World of Warcraft, Maplestory, Lost Ark, Black Desert Online, and Granblue Fantasy.'
+      };
+
+      // TypeScript and JavaScript versions of the code
+      const typescriptHTML = `<span class="comment">// robertLaurella.ts</span>
+<span class="keyword">interface</span> <span class="type">Skills</span> {
+  <span class="property">productMarketing</span>: <span class="type">string</span>[];
+  <span class="property">technical</span>: <span class="type">string</span>[];
+  <span class="property">interests</span>: <span class="type">string</span>[];
+}
+<span class="keyword">const</span> <span class="property">robertLaurella</span>: <span class="type">Skills</span> = {
+
+  <span class="property">productMarketing</span>: [
+    <span class="string">"Go-to-market strategy"</span>,
+    <span class="string">"Product positioning"</span>,
+    <span class="string">"Developer relations"</span>,
+  ],
+  <span class="property">technical</span>: [
+    <span class="string">"LLM orchestration & agent workflows"</span>,
+    <span class="string">"Web app & live service management"</span>,
+    <span class="string">"TypeScript/JavaScript"</span>,
+  ],
+  <span class="property">interests</span>: [
+    <span class="string">"Building good software"</span>,
+    <span class="string expandable" data-skill="MMORPGs">"MMORPGs"</span>,
+    <span class="string">"Technical storytelling"</span>
+  ]
+};
+<span class="keyword">export default</span> robertLaurella;`;
+
+      const javascriptHTML = `<span class="comment">// robertLaurella.js</span>
+<span class="keyword">const</span> <span class="property">robertLaurella</span> = {
+
+  <span class="property">productMarketing</span>: [
+    <span class="string">"Go-to-market strategy"</span>,
+    <span class="string">"Product positioning"</span>,
+    <span class="string">"Developer relations"</span>,
+  ],
+  <span class="property">technical</span>: [
+    <span class="string">"LLM orchestration & agent workflows"</span>,
+    <span class="string">"Web app & live service management"</span>,
+    <span class="string">"TypeScript/JavaScript"</span>,
+  ],
+  <span class="property">interests</span>: [
+    <span class="string">"Building good software"</span>,
+    <span class="string expandable" data-skill="MMORPGs">"MMORPGs"</span>,
+    <span class="string">"Technical storytelling"</span>
+  ]
+};
+<span class="keyword">export default</span> robertLaurella;`;
+
+      // Track compilation state
+      let isCompiled = false;
+      let currentView = 'ts'; // 'ts' or 'js'
+
+      // Scramble text animation - characters cycle through random chars before settling
+      function scrambleText(element, duration, targetHTML, onComplete) {
+        const textContent = element.textContent;
+        const scrambleChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789{}[]()<>|/\\!@#$%^&*:;';
+        const scrambleColors = ['#9999ff', '#ff99cc', '#ffcc99', '#99ffcc', '#cc99ff', '#99ccff', '#f92672', '#66d9ef', '#a6e22e'];
+
+        // Get target text content for the final result
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = targetHTML;
+        const targetText = tempDiv.textContent;
+
+        // Track which characters are "locked" (showing correct char)
+        const locked = new Array(targetText.length).fill(false);
+
+        // Pre-lock whitespace characters
+        for (let i = 0; i < targetText.length; i++) {
+          if (/\s/.test(targetText[i])) locked[i] = true;
+        }
+
+        const startTime = Date.now();
+        const frameInterval = 40; // ms between frames
+
+        function frame() {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+
+          // Exponential easing - starts slow, speeds up at the end
+          const easedProgress = progress < 0.5
+            ? 2 * progress * progress
+            : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+          // Lock in more characters as time progresses
+          const targetLocked = Math.floor(easedProgress * targetText.length);
+          let currentLocked = locked.filter(Boolean).length;
+
+          // Randomly lock characters to reach target
+          while (currentLocked < targetLocked) {
+            const unlocked = [];
+            for (let i = 0; i < locked.length; i++) {
+              if (!locked[i]) unlocked.push(i);
+            }
+            if (unlocked.length === 0) break;
+            const idx = unlocked[Math.floor(Math.random() * unlocked.length)];
+            locked[idx] = true;
+            currentLocked++;
+          }
+
+          // Build the scrambled string with colors
+          let result = '';
+          for (let i = 0; i < targetText.length; i++) {
+            const char = targetText[i];
+            if (/\s/.test(char)) {
+              // Preserve whitespace as-is
+              result += char;
+            } else if (locked[i]) {
+              // Locked chars show in a muted color
+              result += `<span style="color:#888">${char}</span>`;
+            } else {
+              // Scrambled chars get random colors
+              const randomChar = scrambleChars[Math.floor(Math.random() * scrambleChars.length)];
+              const randomColor = scrambleColors[Math.floor(Math.random() * scrambleColors.length)];
+              result += `<span style="color:${randomColor}">${randomChar}</span>`;
+            }
+          }
+
+          element.innerHTML = result;
+
+          if (progress < 1) {
+            setTimeout(frame, frameInterval);
+          } else {
+            // Show target HTML with syntax highlighting
+            element.innerHTML = targetHTML;
+            if (onComplete) onComplete();
+          }
+        }
+
+        frame();
+      }
+
+      // Create toggle button (hidden initially)
+      const toggleBtn = document.createElement('button');
+      toggleBtn.className = 'terminal-code-toggle';
+      toggleBtn.innerHTML = '<span class="toggle-label">TS</span>';
+      toggleBtn.style.display = 'none';
+      document.querySelector('.terminal-code-wrapper').appendChild(toggleBtn);
+
+      // Toggle between TS and JS
+      toggleBtn.addEventListener('click', () => {
+        const codeBlock = document.querySelector('.terminal-code');
+        if (currentView === 'js') {
+          codeBlock.innerHTML = typescriptHTML;
+          currentView = 'ts';
+          toggleBtn.innerHTML = '<span class="toggle-label">TS</span>';
+          toggleBtn.classList.remove('showing-js');
+        } else {
+          codeBlock.innerHTML = javascriptHTML;
+          currentView = 'js';
+          toggleBtn.innerHTML = '<span class="toggle-label">JS</span>';
+          toggleBtn.classList.add('showing-js');
+        }
+        // Re-attach expansion handlers
+        attachSkillExpansionHandlers();
+      });
+
+      // Handle skill expansion clicks
+      function attachSkillExpansionHandlers() {
+        const codeBlock = document.querySelector('.terminal-code');
+        const expandables = codeBlock.querySelectorAll('.expandable');
+
+        expandables.forEach(el => {
+          el.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const skill = el.getAttribute('data-skill');
+            const description = skillDescriptions[skill];
+            if (!description) return;
+
+            // Check if already expanded
+            const existingExpansion = el.parentElement.querySelector(`.skill-expansion[data-for="${skill}"]`);
+
+            if (existingExpansion) {
+              // Collapse
+              existingExpansion.classList.remove('visible');
+              el.classList.remove('expanded');
+              setTimeout(() => existingExpansion.remove(), 300);
+            } else {
+              // Expand - insert comment line after the skill
+              const expansion = document.createElement('span');
+              expansion.className = 'skill-expansion';
+              expansion.setAttribute('data-for', skill);
+              expansion.textContent = `// ${description}`;
+
+              // Insert after the comma following the skill
+              el.insertAdjacentElement('afterend', expansion);
+
+              // Trigger animation
+              requestAnimationFrame(() => {
+                expansion.classList.add('visible');
+              });
+              el.classList.add('expanded');
+            }
+          });
+        });
+      }
+
+      // Attach handlers on initial page load
+      attachSkillExpansionHandlers();
+
+      runCodeBtn.addEventListener('click', () => {
+        const codeBlock = document.querySelector('.terminal-code');
+
+        // Step 1: Show compiling in terminal
+        if (window.showTerminalOutput) {
+          window.showTerminalOutput('tsc robertLaurella.ts...', 'success');
+        }
+
+        // Visual feedback on button - compiling state
+        runCodeBtn.classList.add('ran');
+        runCodeBtn.innerHTML = '<span class="run-icon">⟳</span> tsc';
+
+        // Step 2: Run scramble animation, compile TS to JS
+        scrambleText(codeBlock, 1200, javascriptHTML, () => {
+          // Update state
+          isCompiled = true;
+          currentView = 'js';
+
+          // Show toggle button
+          toggleBtn.style.display = 'flex';
+          toggleBtn.innerHTML = '<span class="toggle-label">JS</span>';
+          toggleBtn.classList.add('showing-js');
+
+          // Re-attach skill expansion handlers after code change
+          attachSkillExpansionHandlers();
+
+          // Delay before showing completion to let users appreciate the animation
+          setTimeout(() => {
+            // Log compilation steps to console
+            console.log('%c> tsc robertLaurella.ts', 'color: #66d9ef; font-size: 12px;');
+            console.log('%c✓ compiled to ES2024', 'color: #a6e22e; font-size: 11px;');
+            console.log('%c> node robertLaurella.js', 'color: #66d9ef; font-size: 12px;');
+            console.log(robertLaurella);
+
+            // Easter egg reveal in console
+            console.log('%c\n' +
+              '  ╔═════════════════════════════════════════════════════════════════════════════╗\n' +
+              '  ║                                                                             ║\n' +
+              '  ║    ____        _               _     _                        _ _           ║\n' +
+              '  ║   |  _ \\ ___  | |__   ___ _ __| |_  | |    __ _ _   _ _ __ ___| | | __ _    ║\n' +
+              '  ║   | |_) / _ \\ | \'_ \\ / _ \\ \'__| __| | |   / _` | | | | \'__/ _ \\ | |/ _` |   ║\n' +
+              '  ║   |  _ < (_) || |_) |  __/ |  | |_  | |__| (_| | |_| | | |  __/ | | (_| |   ║\n' +
+              '  ║   |_| \\_\\___/ |_.__/ \\___|_|   \\__| |_____\\__,_|\\__,_|_|  \\___|_|_|\\__,_|   ║\n' +
+              '  ║                                                                             ║\n' +
+              '  ║   You found the easter egg!                                                 ║\n' +
+              '  ║                                                                             ║\n' +
+              '  ╚═════════════════════════════════════════════════════════════════════════════╝\n',
+              'font-family: monospace; color: #9999ff; font-size: 12px; line-height: 1.2;'
+            );
+            console.log('%cIf you\'re reading this, you\'re probably the kind of person I want to talk to.', 'font-size: 14px; color: #666; font-weight: bold;');
+            console.log('%c\n📚 PhD in English → 📈 Product Marketing → 💻 Still shipping code', 'font-size: 13px; color: #999; font-style: italic;');
+            console.log('%c\n💬 Let\'s chat: robert.laurella@gmail.com', 'font-size: 13px; color: #333; font-weight: bold;');
+
+            // Update button
+            runCodeBtn.innerHTML = '<span class="run-icon">✓</span> ran';
+
+            // Update terminal bar - direct users to browser console (6 seconds visibility)
+            if (window.showTerminalOutput) {
+              window.showTerminalOutput('✓ open browser console (F12)', 'success', 6000);
+            }
+
+            // Reset button after delay
+            setTimeout(() => {
+              runCodeBtn.classList.remove('ran');
+              runCodeBtn.innerHTML = '<span class="run-icon">▶</span> run';
+            }, 2000);
+          }, 1200);
+        });
+      });
     </script>
+
 
     <script>
       // Terminal status bar - Update time
@@ -1042,10 +1706,244 @@ I hold a PhD in English from the University of Oxford, an MA from the University
 
       // Keyboard shortcut: Press 'd' to toggle dark mode
       document.addEventListener('keydown', (e) => {
-        // Only trigger if not typing in an input/textarea
-        if (e.key === 'd' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+        // Only trigger if not typing in an input/textarea and terminal not active
+        if (e.key === 'd' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName) && !window.terminalActive) {
           toggleDarkMode();
           console.log('🌓 Dark mode toggled via keyboard shortcut');
+        }
+      });
+    </script>
+
+    <!-- Terminal input functionality -->
+    <script>
+      const terminalBar = document.querySelector('.terminal-bar');
+      const terminalBarLeft = document.querySelector('.terminal-bar-left');
+      const terminalBarRight = document.querySelector('.terminal-bar-right');
+
+      let originalLeftContent = terminalBarLeft.innerHTML;
+      let originalRightContent = terminalBarRight.innerHTML;
+      window.terminalActive = false;
+      let outputTimeout = null;
+
+      // Command definitions
+      const commands = {
+        help: () => ({
+          text: 'ls · home · about · projects · theme · whoami · contact · hire · run · coffee · clear · reset',
+          type: 'success'
+        }),
+        ls: () => ({
+          text: 'home  about  projects',
+          type: 'success'
+        }),
+        home: () => {
+          document.querySelector('[data-tab="home"]').click();
+          return { text: '→ home', type: 'success' };
+        },
+        about: () => {
+          document.querySelector('[data-tab="about"]').click();
+          return { text: '→ about', type: 'success' };
+        },
+        projects: () => {
+          document.querySelector('[data-tab="projects"]').click();
+          return { text: '→ projects', type: 'success' };
+        },
+        cd: (args) => {
+          const tab = args[0]?.toLowerCase();
+          const validTabs = ['home', 'about', 'projects'];
+          if (!tab) {
+            return { text: 'usage: cd <tab>', type: 'error' };
+          }
+          if (validTabs.includes(tab)) {
+            document.querySelector(`[data-tab="${tab}"]`).click();
+            return { text: `→ ${tab}`, type: 'success' };
+          }
+          return { text: `cd: ${tab}: no such tab`, type: 'error' };
+        },
+        theme: (args) => {
+          const mode = args[0]?.toLowerCase();
+          if (mode === 'dark') {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('theme', 'dark');
+            document.querySelector('.sun-icon').style.display = 'none';
+            document.querySelector('.moon-icon').style.display = 'block';
+            return { text: 'theme → dark', type: 'success' };
+          } else if (mode === 'light') {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('theme', 'light');
+            document.querySelector('.sun-icon').style.display = 'block';
+            document.querySelector('.moon-icon').style.display = 'none';
+            return { text: 'theme → light', type: 'success' };
+          } else {
+            // Toggle
+            document.getElementById('theme-toggle').click();
+            const isDark = document.body.classList.contains('dark-mode');
+            return { text: `theme → ${isDark ? 'dark' : 'light'}`, type: 'success' };
+          }
+        },
+        whoami: () => ({
+          text: 'PhD → Product Marketing → still ships code',
+          type: 'success'
+        }),
+        contact: () => {
+          navigator.clipboard.writeText('robert.laurella@gmail.com');
+          return { text: 'robert.laurella@gmail.com — copied', type: 'success' };
+        },
+        email: () => commands.contact(),
+        hire: () => {
+          navigator.clipboard.writeText('robert.laurella@gmail.com');
+          return { text: "let's talk → robert.laurella@gmail.com — copied", type: 'success' };
+        },
+        coffee: () => {
+          window.open('https://shouldihaveacupof.coffee/', '_blank');
+          return { text: '☕ opening...', type: 'success' };
+        },
+        clear: () => {
+          // Reset particles, game state, and demo
+          if (window.initParticles) {
+            window.initParticles();
+          }
+          localStorage.removeItem('particle-demo-seen');
+          // Trigger the demo again after a short delay
+          setTimeout(() => {
+            if (window.triggerAutoDemo) {
+              window.triggerAutoDemo();
+            }
+          }, 500);
+          return { text: 'game reset — good luck!', type: 'success' };
+        },
+        reset: () => {
+          // Alias for clear
+          return commands.clear();
+        },
+        sudo: () => ({
+          text: 'nice try',
+          type: 'error'
+        }),
+        run: () => {
+          // Trigger the run button click
+          document.getElementById('run-code-btn').click();
+          return { text: 'executed → check console', type: 'success' };
+        }
+      };
+
+      function activateTerminal() {
+        if (window.terminalActive) return;
+        window.terminalActive = true;
+
+        if (outputTimeout) {
+          clearTimeout(outputTimeout);
+          outputTimeout = null;
+        }
+
+        terminalBar.classList.add('input-mode');
+        terminalBarLeft.innerHTML = `
+          <div class="terminal-segment">
+            <span class="terminal-prompt">$</span>
+            <input type="text" class="terminal-input" placeholder="type a command..." autofocus>
+          </div>
+        `;
+        terminalBarRight.innerHTML = `
+          <div class="terminal-segment">
+            <span class="terminal-hint">enter to run · esc to close</span>
+          </div>
+        `;
+
+        const input = terminalBar.querySelector('.terminal-input');
+        input.focus();
+
+        input.addEventListener('keydown', handleTerminalInput);
+        input.addEventListener('blur', handleTerminalBlur);
+      }
+
+      function handleTerminalInput(e) {
+        if (e.key === 'Enter') {
+          const input = e.target;
+          const value = input.value.trim();
+
+          if (value) {
+            executeCommand(value);
+          } else {
+            deactivateTerminal();
+          }
+        } else if (e.key === 'Escape') {
+          deactivateTerminal();
+        }
+      }
+
+      function handleTerminalBlur(e) {
+        // Small delay to allow clicking within terminal
+        setTimeout(() => {
+          if (window.terminalActive && !terminalBar.contains(document.activeElement)) {
+            deactivateTerminal();
+          }
+        }, 100);
+      }
+
+      function executeCommand(input) {
+        const parts = input.split(/\s+/);
+        const cmd = parts[0].toLowerCase();
+        const args = parts.slice(1);
+
+        let result;
+        if (commands[cmd]) {
+          result = commands[cmd](args);
+        } else {
+          result = { text: `command not found: ${cmd}`, type: 'error' };
+        }
+
+        showOutput(result.text, result.type);
+      }
+
+      function showOutput(text, type = 'success', duration = 3000) {
+        window.terminalActive = false;
+        terminalBar.classList.remove('input-mode');
+
+        terminalBarLeft.innerHTML = `
+          <div class="terminal-segment">
+            <span class="terminal-prompt">$</span>
+            <span class="terminal-output ${type}">${text}</span>
+          </div>
+        `;
+        terminalBarRight.innerHTML = originalRightContent;
+
+        // Clear any existing timeout before setting new one
+        if (outputTimeout) {
+          clearTimeout(outputTimeout);
+        }
+
+        // Return to normal after delay
+        outputTimeout = setTimeout(() => {
+          deactivateTerminal();
+        }, duration);
+      }
+
+      // Expose for external use (e.g., run button)
+      window.showTerminalOutput = showOutput;
+
+      function deactivateTerminal() {
+        window.terminalActive = false;
+        terminalBar.classList.remove('input-mode');
+        terminalBarLeft.innerHTML = originalLeftContent;
+        terminalBarRight.innerHTML = originalRightContent;
+
+        if (outputTimeout) {
+          clearTimeout(outputTimeout);
+          outputTimeout = null;
+        }
+      }
+
+      // Activate on '/' key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+          e.preventDefault();
+          activateTerminal();
+        }
+      });
+
+      // Activate on click
+      terminalBar.addEventListener('click', (e) => {
+        if (!window.terminalActive) {
+          activateTerminal();
         }
       });
     </script>
@@ -1326,7 +2224,18 @@ I hold a PhD in English from the University of Oxford, an MA from the University
       function updateConversionCounter() {
         conversionCount++;
         counterValue.textContent = conversionCount;
+
+        // Pulse animation on update
+        counterElement.classList.remove('pulse');
+        void counterElement.offsetWidth; // Trigger reflow
+        counterElement.classList.add('pulse');
+
+        // Remove attention animation after first capture
+        counterElement.classList.remove('attention');
       }
+
+      // Start with attention-grabbing pulse if counter is at 0
+      counterElement.classList.add('attention');
 
       // Conversion effect particles
       let conversionEffects = [];
@@ -1374,9 +2283,155 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         }
       }
 
+      // Special starburst effect for shooting star captures
+      class StarburstEffect {
+        constructor(x, y) {
+          this.x = x;
+          this.y = y;
+          this.life = 1.0;
+
+          // Expanding rings
+          this.rings = [
+            { radius: 0, maxRadius: 80, speed: 4, width: 3, opacity: 1 },
+            { radius: 0, maxRadius: 60, speed: 3, width: 2, opacity: 0.8, delay: 5 },
+            { radius: 0, maxRadius: 100, speed: 5, width: 1, opacity: 0.6, delay: 10 }
+          ];
+          this.ringFrame = 0;
+
+          // Starburst particles - more dramatic
+          this.particles = [];
+          const starColors = ['#ffcc00', '#fff8dc', '#ffd700', '#ffaa00', '#ffffff'];
+
+          // Create starburst rays
+          for (let i = 0; i < 16; i++) {
+            const angle = (Math.PI * 2 * i) / 16;
+            const speed = 4 + Math.random() * 3;
+            this.particles.push({
+              x: x,
+              y: y,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              life: 1.0,
+              color: starColors[Math.floor(Math.random() * starColors.length)],
+              size: 2 + Math.random() * 2,
+              isStar: i % 4 === 0 // Every 4th particle is a mini star
+            });
+          }
+
+          // Add some random sparkles
+          for (let i = 0; i < 20; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 1 + Math.random() * 5;
+            this.particles.push({
+              x: x,
+              y: y,
+              vx: Math.cos(angle) * speed,
+              vy: Math.sin(angle) * speed,
+              life: 1.0,
+              color: starColors[Math.floor(Math.random() * starColors.length)],
+              size: 1 + Math.random(),
+              isStar: false
+            });
+          }
+        }
+
+        // Draw mini star shape
+        drawMiniStar(cx, cy, size) {
+          ctx.beginPath();
+          for (let i = 0; i < 10; i++) {
+            const radius = i % 2 === 0 ? size : size * 0.4;
+            const angle = (i * Math.PI / 5) - Math.PI / 2;
+            const x = cx + Math.cos(angle) * radius;
+            const y = cy + Math.sin(angle) * radius;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.closePath();
+        }
+
+        update() {
+          this.ringFrame++;
+          this.life -= 0.02;
+
+          // Update particles
+          this.particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vx *= 0.96;
+            p.vy *= 0.96;
+            p.life -= 0.03;
+          });
+
+          // Update rings
+          this.rings.forEach(ring => {
+            if (this.ringFrame > (ring.delay || 0)) {
+              ring.radius += ring.speed;
+              ring.opacity = Math.max(0, 1 - ring.radius / ring.maxRadius);
+            }
+          });
+
+          return this.life > 0;
+        }
+
+        draw() {
+          // Draw expanding rings
+          this.rings.forEach(ring => {
+            if (ring.opacity > 0) {
+              ctx.beginPath();
+              ctx.arc(this.x, this.y, ring.radius, 0, Math.PI * 2);
+              ctx.strokeStyle = `rgba(255, 204, 0, ${ring.opacity * 0.7})`;
+              ctx.lineWidth = ring.width;
+              ctx.stroke();
+            }
+          });
+
+          // Draw particles
+          this.particles.forEach(p => {
+            if (p.life > 0) {
+              ctx.globalAlpha = p.life;
+
+              if (p.isStar) {
+                // Draw as mini star
+                ctx.fillStyle = p.color;
+                this.drawMiniStar(p.x, p.y, p.size * 2);
+                ctx.fill();
+              } else {
+                // Draw as glowing circle
+                ctx.shadowColor = p.color;
+                ctx.shadowBlur = 5;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+              }
+
+              ctx.globalAlpha = 1;
+            }
+          });
+
+          // Central flash (fades quickly)
+          if (this.life > 0.7) {
+            const flashIntensity = (this.life - 0.7) / 0.3;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, 15 * flashIntensity, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 255, 255, ${flashIntensity * 0.8})`;
+            ctx.fill();
+          }
+
+          // Reset canvas state
+          ctx.globalAlpha = 1;
+          ctx.shadowBlur = 0;
+          ctx.lineWidth = 1;
+        }
+      }
+
+      // Track starburst effects separately
+      let starburstEffects = [];
+
       // Particle class
       class Particle {
-        constructor() {
+        constructor(autoPilot = false) {
           this.x = Math.random() * canvas.width;
           this.y = Math.random() * canvas.height;
           this.vx = (Math.random() - 0.5) * 0.5;
@@ -1384,13 +2439,30 @@ I hold a PhD in English from the University of Oxford, an MA from the University
           this.radius = Math.random() * 2 + 1;
           this.color = colors[Math.floor(Math.random() * colors.length)];
           this.locked = false;
+          this.autoPilot = autoPilot;
         }
 
         update() {
           let shouldConvert = false;
 
+          // Auto-pilot mode: steer toward diamond center
+          if (this.autoPilot) {
+            // Get diamond center in canvas coordinates
+            const svgRect = svg.getBoundingClientRect();
+            const canvasRect = canvas.getBoundingClientRect();
+            const targetX = (svgRect.left - canvasRect.left) + (svgRect.width / 2);
+            const targetY = (svgRect.top - canvasRect.top) + (svgRect.height / 2);
+
+            const dx = targetX - this.x;
+            const dy = targetY - this.y;
+            const angle = Math.atan2(dy, dx);
+
+            // Gentle acceleration toward center
+            this.vx += Math.cos(angle) * 0.08;
+            this.vy += Math.sin(angle) * 0.08;
+          }
           // Mouse interaction
-          if (mouse.x !== null && mouse.y !== null) {
+          else if (mouse.x !== null && mouse.y !== null) {
             const dx = mouse.x - this.x;
             const dy = mouse.y - this.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
@@ -1403,20 +2475,38 @@ I hold a PhD in English from the University of Oxford, an MA from the University
               const attractionStrength = 0.15;
               this.vx += Math.cos(angle) * attractionStrength;
               this.vy += Math.sin(angle) * attractionStrength;
-
-              // Check if particle is near the diamond path
-              if (this.isNearDiamond()) {
-                shouldConvert = true;
-              }
             }
           } else {
             // Mouse left - unlock particle
             this.locked = false;
           }
 
+          // Store old position
+          const oldX = this.x;
+          const oldY = this.y;
+
           // Move particle
           this.x += this.vx;
           this.y += this.vy;
+
+          // Check collision with diamond
+          const { x: svgX, y: svgY } = this.canvasToSvg();
+
+          if (this.isInsideDiamond(svgX, svgY)) {
+            // Particle has entered the diamond!
+            if (this.locked || this.autoPilot) {
+              // Being dragged or auto-piloted - convert to tracer
+              shouldConvert = true;
+            } else {
+              // Not being dragged - bounce back
+              this.x = oldX;
+              this.y = oldY;
+              this.bounceOffDiamond();
+            }
+          } else if (this.isAtDiamondEdge(svgX, svgY) && (this.locked || this.autoPilot)) {
+            // At the edge and being dragged/piloted - convert
+            shouldConvert = true;
+          }
 
           // Damping
           this.vx *= 0.98;
@@ -1433,26 +2523,69 @@ I hold a PhD in English from the University of Oxford, an MA from the University
           return shouldConvert;
         }
 
-        isNearDiamond() {
-          // Convert canvas coordinates to SVG coordinates
+        // Convert canvas coords to SVG coords
+        canvasToSvg() {
           const svgRect = svg.getBoundingClientRect();
           const canvasRect = canvas.getBoundingClientRect();
-
-          // Get position relative to SVG
           const relativeX = this.x + canvasRect.left - svgRect.left;
           const relativeY = this.y + canvasRect.top - svgRect.top;
-
-          // Convert to SVG coordinate space
           const svgX = (relativeX / svgRect.width) * svgWidth;
           const svgY = (relativeY / svgRect.height) * svgHeight;
+          return { x: svgX, y: svgY };
+        }
 
-          // Check distance to path center (200, 200) with diamond bounds
+        // Check if point is inside the diamond (rhombus)
+        // Diamond vertices: top (200,50), right (320,200), bottom (200,350), left (80,200)
+        // For rhombus: |x - cx| / halfWidth + |y - cy| / halfHeight <= 1
+        isInsideDiamond(svgX, svgY) {
           const centerX = 200;
           const centerY = 200;
-          const distToCenter = Math.sqrt((svgX - centerX) ** 2 + (svgY - centerY) ** 2);
+          const halfWidth = 120;  // right vertex is at 320, so 320 - 200 = 120
+          const halfHeight = 150; // top vertex is at 50, so 200 - 50 = 150
 
-          // Diamond roughly spans 150 units from center - 2 unit tolerance
-          return Math.abs(distToCenter - 150) < 2;
+          // Rhombus equation: normalized manhattan distance
+          const normalizedDist = Math.abs(svgX - centerX) / halfWidth + Math.abs(svgY - centerY) / halfHeight;
+          return normalizedDist <= 1;
+        }
+
+        // Check if particle is at the diamond boundary (for conversion)
+        isAtDiamondEdge(svgX, svgY) {
+          const centerX = 200;
+          const centerY = 200;
+          const halfWidth = 120;
+          const halfHeight = 150;
+
+          const normalizedDist = Math.abs(svgX - centerX) / halfWidth + Math.abs(svgY - centerY) / halfHeight;
+          // At edge means within a small tolerance of the boundary (value = 1)
+          return normalizedDist > 0.85 && normalizedDist <= 1.05;
+        }
+
+        isNearDiamond() {
+          const { x: svgX, y: svgY } = this.canvasToSvg();
+          return this.isAtDiamondEdge(svgX, svgY);
+        }
+
+        // Bounce particle off the diamond edge
+        bounceOffDiamond() {
+          const { x: svgX, y: svgY } = this.canvasToSvg();
+          const centerX = 200;
+          const centerY = 200;
+
+          // Calculate normal direction (pointing outward from center)
+          const dx = svgX - centerX;
+          const dy = svgY - centerY;
+          const len = Math.sqrt(dx * dx + dy * dy);
+          const nx = dx / len;
+          const ny = dy / len;
+
+          // Reflect velocity: v' = v - 2(v·n)n
+          const dot = this.vx * nx + this.vy * ny;
+          this.vx = this.vx - 2 * dot * nx;
+          this.vy = this.vy - 2 * dot * ny;
+
+          // Add some outward push
+          this.vx += nx * 0.5;
+          this.vy += ny * 0.5;
         }
 
         draw() {
@@ -1477,6 +2610,29 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         }
       }
       initParticles();
+      window.initParticles = initParticles; // Expose for terminal command
+
+      // One-time auto-demo for first-time visitors
+      function triggerAutoDemo() {
+        const hasSeenDemo = localStorage.getItem('particle-demo-seen');
+        if (hasSeenDemo) return;
+
+        // Wait a few seconds, then launch an auto-pilot particle
+        setTimeout(() => {
+          const demoParticle = new Particle(true);
+          // Start from a corner for dramatic effect
+          demoParticle.x = canvas.width * 0.15;
+          demoParticle.y = canvas.height * 0.85;
+          demoParticle.radius = 3;
+          demoParticle.color = '#9999ff';
+          particles.push(demoParticle);
+
+          // Mark demo as seen
+          localStorage.setItem('particle-demo-seen', 'true');
+        }, 3000);
+      }
+      triggerAutoDemo();
+      window.triggerAutoDemo = triggerAutoDemo; // Expose for terminal command
 
       // Respawn particles from edges
       function spawnParticleFromEdge() {
@@ -1510,7 +2666,7 @@ I hold a PhD in English from the University of Oxford, an MA from the University
 
       // Respawn timing
       let lastRespawnTime = 0;
-      const respawnInterval = 300; // ms between respawns
+      const respawnInterval = 225; // ms between respawns (25% faster)
 
       // Connect particles
       function connectParticles() {
@@ -1551,50 +2707,12 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         }
       }
 
-      // Animation loop
+      // Animation loop (shooting stars integrated below)
+      let animationStarted = false;
       function animate() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Respawn particles if below target count
-        const now = Date.now();
-        const targetCount = getTargetParticleCount();
-        if (particles.length < targetCount && now - lastRespawnTime > respawnInterval) {
-          particles.push(spawnParticleFromEdge());
-          lastRespawnTime = now;
-        }
-
-        // Update particles and check for conversions
-        particles = particles.filter(particle => {
-          const shouldConvert = particle.update();
-
-          if (shouldConvert) {
-            // Create conversion effect
-            conversionEffects.push(new ConversionEffect(particle.x, particle.y));
-
-            // Convert particle to tracer
-            if (window.createDiamondTracer) {
-              window.createDiamondTracer(0);
-              updateConversionCounter();
-            }
-            return false; // Remove this particle
-          }
-
-          particle.draw();
-          return true; // Keep this particle
-        });
-
-        connectParticles();
-
-        // Update and draw conversion effects
-        conversionEffects = conversionEffects.filter(effect => {
-          const isAlive = effect.update();
-          effect.draw();
-          return isAlive;
-        });
-
-        requestAnimationFrame(animate);
+        if (animationStarted) return; // Prevent double-start
       }
-      animate();
+      // Don't auto-start - will be started by shooting star code below
 
       // Mouse move event
       particlePanel.addEventListener('mousemove', (e) => {
@@ -1613,6 +2731,425 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         resizeCanvas();
         initParticles();
       });
+
+      // ========================================
+      // SHOOTING STAR GAME MECHANICS
+      // ========================================
+
+      // Lives system
+      let lives = 3;
+      const heartsContainer = document.getElementById('lives-container');
+      const shootingStarAlert = document.getElementById('shooting-star-alert');
+
+      // Game state
+      let gameOver = false;
+      const gameOverOverlay = document.getElementById('game-over-overlay');
+      const finalScoreElement = document.getElementById('final-score');
+      const pixelSkull = document.getElementById('pixel-skull');
+
+      // Screen flash effect (drawn in animation loop)
+      let screenFlash = { active: false, alpha: 0, color: 'rgba(255, 68, 68,' };
+
+      function triggerScreenFlash(color = 'rgba(255, 68, 68,') {
+        screenFlash.active = true;
+        screenFlash.alpha = 0.3;
+        screenFlash.color = color;
+      }
+
+      function loseLife() {
+        if (lives <= 0 || gameOver) return;
+
+        lives--;
+        const heart = heartsContainer.querySelector(`[data-heart="${lives + 1}"]`);
+        if (heart) {
+          heart.classList.add('losing');
+          setTimeout(() => {
+            heart.classList.remove('losing');
+            heart.classList.add('lost');
+          }, 500);
+        }
+
+        // Trigger screen flash (will be drawn in animation loop)
+        triggerScreenFlash();
+
+        if (lives <= 0) {
+          triggerGameOver();
+        }
+      }
+
+      function triggerGameOver() {
+        gameOver = true;
+
+        // Update final score
+        finalScoreElement.textContent = conversionCount;
+
+        // Show game over screen with slight delay for dramatic effect
+        setTimeout(() => {
+          gameOverOverlay.classList.add('visible');
+          pixelSkull.classList.add('animate');
+
+          // Show terminal hint in the terminal bar
+          if (window.showTerminalOutput) {
+            window.showTerminalOutput('game over — type "clear" to restart', 'error', 10000);
+          }
+        }, 600);
+
+        console.log('💔 Game over! Final score:', conversionCount);
+        console.log('💡 Use the terminal: press / and type "clear" to restart');
+      }
+
+      function resetLives() {
+        lives = 3;
+        gameOver = false;
+        const hearts = heartsContainer.querySelectorAll('.pixel-heart');
+        hearts.forEach(heart => {
+          heart.classList.remove('lost', 'losing');
+        });
+
+        // Hide game over screen
+        gameOverOverlay.classList.remove('visible');
+        pixelSkull.classList.remove('animate');
+      }
+
+      // Expose for terminal clear command
+      const originalInitParticles = window.initParticles;
+      window.initParticles = function() {
+        originalInitParticles();
+        resetLives();
+        shootingStars = [];
+        starburstEffects = [];
+        conversionCount = 0;
+        counterValue.textContent = '0';
+      };
+
+      // Shooting Star class
+      class ShootingStar {
+        constructor() {
+          // Random starting edge
+          const edge = Math.floor(Math.random() * 4);
+          const speed = 2 + Math.random() * 2; // Faster than normal particles
+
+          switch (edge) {
+            case 0: // Top
+              this.x = Math.random() * canvas.width;
+              this.y = -10;
+              this.vx = (Math.random() - 0.5) * 2;
+              this.vy = speed;
+              break;
+            case 1: // Right
+              this.x = canvas.width + 10;
+              this.y = Math.random() * canvas.height;
+              this.vx = -speed;
+              this.vy = (Math.random() - 0.5) * 2;
+              break;
+            case 2: // Bottom
+              this.x = Math.random() * canvas.width;
+              this.y = canvas.height + 10;
+              this.vx = (Math.random() - 0.5) * 2;
+              this.vy = -speed;
+              break;
+            case 3: // Left
+              this.x = -10;
+              this.y = Math.random() * canvas.height;
+              this.vx = speed;
+              this.vy = (Math.random() - 0.5) * 2;
+              break;
+          }
+
+          this.radius = 4;
+          this.color = '#ffcc00'; // Golden yellow
+          this.trail = [];
+          this.maxTrailLength = 15;
+          this.locked = false;
+          this.lifetime = 0;
+          this.maxLifetime = 300; // ~5 seconds at 60fps
+        }
+
+        // Reuse particle's coordinate conversion
+        canvasToSvg() {
+          const svgRect = svg.getBoundingClientRect();
+          const canvasRect = canvas.getBoundingClientRect();
+          const relativeX = this.x + canvasRect.left - svgRect.left;
+          const relativeY = this.y + canvasRect.top - svgRect.top;
+          const svgX = (relativeX / svgRect.width) * svgWidth;
+          const svgY = (relativeY / svgRect.height) * svgHeight;
+          return { x: svgX, y: svgY };
+        }
+
+        isInsideDiamond(svgX, svgY) {
+          const centerX = 200, centerY = 200;
+          const halfWidth = 120, halfHeight = 150;
+          const normalizedDist = Math.abs(svgX - centerX) / halfWidth + Math.abs(svgY - centerY) / halfHeight;
+          return normalizedDist <= 1;
+        }
+
+        isAtDiamondEdge(svgX, svgY) {
+          const centerX = 200, centerY = 200;
+          const halfWidth = 120, halfHeight = 150;
+          const normalizedDist = Math.abs(svgX - centerX) / halfWidth + Math.abs(svgY - centerY) / halfHeight;
+          return normalizedDist > 0.85 && normalizedDist <= 1.05;
+        }
+
+        update() {
+          this.lifetime++;
+
+          // Store trail position
+          this.trail.push({ x: this.x, y: this.y });
+          if (this.trail.length > this.maxTrailLength) {
+            this.trail.shift();
+          }
+
+          // Mouse interaction - can be grabbed
+          if (mouse.x !== null && mouse.y !== null) {
+            const dx = mouse.x - this.x;
+            const dy = mouse.y - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < mouse.radius || this.locked) {
+              this.locked = true;
+              const angle = Math.atan2(dy, dx);
+              this.vx += Math.cos(angle) * 0.3;
+              this.vy += Math.sin(angle) * 0.3;
+            }
+          } else {
+            this.locked = false;
+          }
+
+          // Move at constant speed (no drag when not locked)
+          this.x += this.vx;
+          this.y += this.vy;
+
+          // Only apply drag when locked to mouse (for controllability)
+          if (this.locked) {
+            this.vx *= 0.96;
+            this.vy *= 0.96;
+          }
+          // When not locked, maintain constant velocity (straight line)
+
+          // Check diamond collision
+          const { x: svgX, y: svgY } = this.canvasToSvg();
+          if (this.isInsideDiamond(svgX, svgY) || this.isAtDiamondEdge(svgX, svgY)) {
+            if (this.locked) {
+              return 'captured'; // Successfully caught!
+            }
+          }
+
+          // Check if escaped (went off screen after entering)
+          const buffer = 50;
+          if (this.x < -buffer || this.x > canvas.width + buffer ||
+              this.y < -buffer || this.y > canvas.height + buffer) {
+            return 'escaped';
+          }
+
+          // Check if timed out
+          if (this.lifetime > this.maxLifetime) {
+            return 'escaped';
+          }
+
+          return 'active';
+        }
+
+        // Draw a 5-pointed star polygon
+        drawStarShape(cx, cy, outerRadius, innerRadius, rotation = 0) {
+          const points = 5;
+          ctx.beginPath();
+          for (let i = 0; i < points * 2; i++) {
+            const radius = i % 2 === 0 ? outerRadius : innerRadius;
+            const angle = (i * Math.PI / points) - Math.PI / 2 + rotation;
+            const x = cx + Math.cos(angle) * radius;
+            const y = cy + Math.sin(angle) * radius;
+            if (i === 0) {
+              ctx.moveTo(x, y);
+            } else {
+              ctx.lineTo(x, y);
+            }
+          }
+          ctx.closePath();
+        }
+
+        draw() {
+          // Rotation based on lifetime (gentle spin)
+          const rotation = this.lifetime * 0.08;
+
+          // Draw trail of mini stars
+          for (let i = 0; i < this.trail.length; i++) {
+            const t = this.trail[i];
+            const alpha = (i / this.trail.length) * 0.6;
+            const size = (i / this.trail.length) * this.radius * 0.7;
+            const trailRotation = rotation - (this.trail.length - i) * 0.15;
+
+            ctx.fillStyle = `rgba(255, 204, 0, ${alpha})`;
+            this.drawStarShape(t.x, t.y, size, size * 0.4, trailRotation);
+            ctx.fill();
+          }
+
+          // Draw star body with glow
+          ctx.shadowColor = '#ffcc00';
+          ctx.shadowBlur = 20;
+          ctx.fillStyle = this.locked ? '#ffffff' : '#ffcc00';
+          this.drawStarShape(this.x, this.y, this.radius * 2.5, this.radius, rotation);
+          ctx.fill();
+
+          // Inner bright core
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = this.locked ? '#ffffff' : '#fff8dc';
+          this.drawStarShape(this.x, this.y, this.radius * 1.2, this.radius * 0.5, rotation);
+          ctx.fill();
+
+          // Draw sparkle rays extending from points
+          ctx.strokeStyle = `rgba(255, 255, 255, ${0.4 + Math.random() * 0.3})`;
+          ctx.lineWidth = 1.5;
+          for (let i = 0; i < 4; i++) {
+            const rayAngle = rotation + (i * Math.PI / 2) + Math.PI / 4;
+            const rayLength = this.radius * (2.5 + Math.random() * 1.5);
+            ctx.beginPath();
+            ctx.moveTo(this.x, this.y);
+            ctx.lineTo(
+              this.x + Math.cos(rayAngle) * rayLength,
+              this.y + Math.sin(rayAngle) * rayLength
+            );
+            ctx.stroke();
+          }
+
+          // Reset canvas state
+          ctx.lineWidth = 1;
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      // Shooting stars array
+      let shootingStars = [];
+
+      // Spawn shooting stars at random intervals (5-15 seconds) - only one at a time
+      function scheduleNextShootingStar() {
+        const delay = 5000 + Math.random() * 10000; // 5-15 seconds
+        setTimeout(() => {
+          // Only spawn if no shooting star currently active
+          if (lives > 0 && !gameOver && shootingStars.length === 0) {
+            // Show warning
+            shootingStarAlert.classList.add('visible');
+
+            // Spawn after short warning
+            setTimeout(() => {
+              shootingStarAlert.classList.remove('visible');
+              if (!gameOver && shootingStars.length === 0) {
+                shootingStars.push(new ShootingStar());
+              }
+            }, 800);
+          }
+          scheduleNextShootingStar();
+        }, delay);
+      }
+
+      // Start the shooting star spawner after initial delay
+      setTimeout(scheduleNextShootingStar, 8000);
+
+      // Main animation loop with shooting stars
+      function animateWithShootingStars() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // If game over, just draw static particles and stop updates
+        if (gameOver) {
+          // Draw particles without updating them (frozen state)
+          particles.forEach(particle => particle.draw());
+          connectParticles();
+          requestAnimationFrame(animateWithShootingStars);
+          return;
+        }
+
+        // Respawn particles if below target count
+        const now = Date.now();
+        const targetCount = getTargetParticleCount();
+        if (particles.length < targetCount && now - lastRespawnTime > respawnInterval) {
+          particles.push(spawnParticleFromEdge());
+          lastRespawnTime = now;
+        }
+
+        // Update particles and check for conversions
+        particles = particles.filter(particle => {
+          const shouldConvert = particle.update();
+
+          if (shouldConvert) {
+            conversionEffects.push(new ConversionEffect(particle.x, particle.y));
+            if (window.createDiamondTracer) {
+              window.createDiamondTracer(0);
+              updateConversionCounter();
+            }
+            return false;
+          }
+
+          particle.draw();
+          return true;
+        });
+
+        // Update shooting stars
+        shootingStars = shootingStars.filter(star => {
+          const status = star.update();
+
+          if (status === 'captured') {
+            // Success! +10 points - use special starburst effect
+            starburstEffects.push(new StarburstEffect(star.x, star.y));
+            if (window.createDiamondTracer) {
+              window.createDiamondTracer(0);
+              // Add 10 to score
+              for (let i = 0; i < 10; i++) {
+                updateConversionCounter();
+              }
+            }
+            return false;
+          } else if (status === 'escaped') {
+            // Missed it - lose a life
+            loseLife();
+            return false;
+          }
+
+          star.draw();
+          return true;
+        });
+
+        connectParticles();
+
+        // Draw connections to shooting stars when grabbed
+        shootingStars.forEach(star => {
+          if (star.locked && mouse.x !== null && mouse.y !== null) {
+            ctx.strokeStyle = 'rgba(255, 204, 0, 0.7)';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(star.x, star.y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.stroke();
+          }
+        });
+
+        // Update and draw conversion effects
+        conversionEffects = conversionEffects.filter(effect => {
+          const isAlive = effect.update();
+          effect.draw();
+          return isAlive;
+        });
+
+        // Update and draw starburst effects (shooting star captures)
+        starburstEffects = starburstEffects.filter(effect => {
+          const isAlive = effect.update();
+          effect.draw();
+          return isAlive;
+        });
+
+        // Draw screen flash effect (fades out smoothly)
+        if (screenFlash.active) {
+          ctx.fillStyle = screenFlash.color + screenFlash.alpha + ')';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          screenFlash.alpha -= 0.02;
+          if (screenFlash.alpha <= 0) {
+            screenFlash.active = false;
+          }
+        }
+
+        requestAnimationFrame(animateWithShootingStars);
+      }
+
+      // Start the animation loop
+      animateWithShootingStars();
     </script>
 
   
