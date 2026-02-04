@@ -546,6 +546,232 @@
     body.dark-mode .animation-panel {
       background: #0a0a0a;
     }
+    /* High scores pill */
+    .high-scores-pill {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      color: #888;
+      cursor: pointer;
+      z-index: 10;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .high-scores-pill:hover {
+      border-color: #9999ff;
+      box-shadow: 0 2px 8px rgba(153, 153, 255, 0.12);
+    }
+    .high-scores-pill svg {
+      width: 11px;
+      height: 11px;
+      stroke: #9999ff;
+      fill: none;
+      stroke-width: 1.5;
+    }
+    .high-scores-pill .top-score {
+      color: #555;
+      font-weight: 600;
+    }
+    body.dark-mode .high-scores-pill {
+      background: rgba(40, 40, 40, 0.9);
+      border-color: #444;
+      color: #777;
+    }
+    body.dark-mode .high-scores-pill:hover {
+      border-color: #9999ff;
+    }
+    body.dark-mode .high-scores-pill .top-score {
+      color: #ccc;
+    }
+    /* High scores modal */
+    .high-scores-modal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.98);
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 24px;
+      min-width: 200px;
+      z-index: 150;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    }
+    .high-scores-modal.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+    .high-scores-modal h3 {
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      color: #999;
+      margin: 0 0 16px 0;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: 500;
+    }
+    .high-scores-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .high-scores-list li {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #444;
+      padding: 8px 0;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .high-scores-list li:last-child {
+      border-bottom: none;
+    }
+    .high-scores-list .rank {
+      color: #bbb;
+      width: 24px;
+    }
+    .high-scores-list .rank.gold { color: #c9a227; }
+    .high-scores-list .rank.silver { color: #8a8a8a; }
+    .high-scores-list .rank.bronze { color: #a67c52; }
+    .high-scores-list .initials {
+      color: #7777cc;
+      text-transform: uppercase;
+      flex: 1;
+      text-align: center;
+    }
+    .high-scores-list .score {
+      color: #444;
+      font-weight: 600;
+      min-width: 50px;
+      text-align: right;
+    }
+    .high-scores-modal .close-btn {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      background: none;
+      border: none;
+      color: #ccc;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+      transition: color 0.15s ease;
+    }
+    .high-scores-modal .close-btn:hover {
+      color: #888;
+    }
+    body.dark-mode .high-scores-modal {
+      background: rgba(30, 30, 30, 0.98);
+      border-color: #333;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    }
+    body.dark-mode .high-scores-modal h3 {
+      color: #666;
+    }
+    body.dark-mode .high-scores-list li {
+      color: #ccc;
+      border-bottom-color: #333;
+    }
+    body.dark-mode .high-scores-list .rank {
+      color: #555;
+    }
+    body.dark-mode .high-scores-list .initials {
+      color: #9999ff;
+    }
+    body.dark-mode .high-scores-list .score {
+      color: #ccc;
+    }
+    body.dark-mode .high-scores-modal .close-btn {
+      color: #555;
+    }
+    body.dark-mode .high-scores-modal .close-btn:hover {
+      color: #888;
+    }
+    /* Game over leaderboard */
+    .game-over-leaderboard {
+      margin-top: 25px;
+      width: 100%;
+      max-width: 220px;
+    }
+    .game-over-leaderboard h4 {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: #666;
+      margin: 0 0 10px 0;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .game-over-leaderboard .high-scores-list li {
+      font-size: 11px;
+      padding: 4px 0;
+    }
+    /* Initials input */
+    .initials-input-container {
+      margin-top: 20px;
+      text-align: center;
+      display: none;
+    }
+    .initials-input-container.visible {
+      display: block;
+    }
+    .initials-input-container label {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: #a6e22e;
+      display: block;
+      margin-bottom: 8px;
+    }
+    .initials-input {
+      background: #1a1a1a;
+      border: 2px solid #9999ff;
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 18px;
+      color: #ffcc00;
+      text-transform: uppercase;
+      text-align: center;
+      width: 80px;
+      letter-spacing: 4px;
+      outline: none;
+    }
+    .initials-input:focus {
+      border-color: #ffcc00;
+    }
+    .initials-submit {
+      background: #9999ff;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: #0a0a12;
+      cursor: pointer;
+      margin-left: 8px;
+      text-transform: uppercase;
+    }
+    .initials-submit:hover {
+      background: #bbbbff;
+    }
+    .initials-submit:disabled {
+      background: #444;
+      cursor: not-allowed;
+    }
     /* Pixelated hearts - Zelda style */
     .lives-container {
       position: absolute;
@@ -1136,6 +1362,19 @@ I hold a PhD in English from the University of Oxford, an MA from the University
     <div class="conversion-counter" id="conversion-counter">
       <span class="counter-value">0</span> captured
     </div>
+    <div class="high-scores-pill" id="high-scores-pill">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 9H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2M18 9h2a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2M6 3h12v7a6 6 0 0 1-12 0V3zM9 21h6M12 16v5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="top-score" id="top-score-display">---</span>
+    </div>
+    <div class="high-scores-modal" id="high-scores-modal">
+      <button class="close-btn" id="close-high-scores">&times;</button>
+      <h3>High Scores</h3>
+      <ul class="high-scores-list" id="high-scores-list">
+        <li><span class="rank">-</span><span class="initials">---</span><span class="score">-</span></li>
+      </ul>
+    </div>
     <div class="lives-container" id="lives-container">
       <div class="pixel-heart" data-heart="1"></div>
       <div class="pixel-heart" data-heart="2"></div>
@@ -1146,6 +1385,17 @@ I hold a PhD in English from the University of Oxford, an MA from the University
       <div class="pixel-skull" id="pixel-skull"></div>
       <div class="game-over-text">Game Over</div>
       <div class="game-over-score">SCORE: <span id="final-score">0</span></div>
+      <div class="initials-input-container" id="initials-container">
+        <label>New High Score! Enter your initials:</label>
+        <input type="text" class="initials-input" id="initials-input" maxlength="3" placeholder="AAA">
+        <button class="initials-submit" id="initials-submit">Save</button>
+      </div>
+      <div class="game-over-leaderboard" id="game-over-leaderboard">
+        <h4>Top Scores</h4>
+        <ul class="high-scores-list" id="game-over-scores-list">
+          <li><span class="rank">-</span><span class="initials">---</span><span class="score">-</span></li>
+        </ul>
+      </div>
       <div class="game-over-prompt">press <span>/</span> then type <span>clear</span></div>
     </div>
     <canvas id="particle-canvas"></canvas>
@@ -2788,6 +3038,11 @@ I hold a PhD in English from the University of Oxford, an MA from the University
           gameOverOverlay.classList.add('visible');
           pixelSkull.classList.add('animate');
 
+          // Check if score qualifies for high score entry
+          if (window.checkHighScore) {
+            window.checkHighScore(conversionCount);
+          }
+
           // Show terminal hint in the terminal bar
           if (window.showTerminalOutput) {
             window.showTerminalOutput('game over — type "clear" to restart', 'error', 10000);
@@ -2809,6 +3064,11 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         // Hide game over screen
         gameOverOverlay.classList.remove('visible');
         pixelSkull.classList.remove('animate');
+
+        // Reset high score input
+        if (window.resetHighScoreInput) {
+          window.resetHighScoreInput();
+        }
       }
 
       // Expose for terminal clear command
@@ -3152,7 +3412,189 @@ I hold a PhD in English from the University of Oxford, an MA from the University
       animateWithShootingStars();
     </script>
 
-  
+    <!-- High Scores System -->
+    <script type="module">
+      // Supabase Configuration
+      const SUPABASE_URL = 'https://yjoxvdetqeisnzzmzimp.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_DZhyxoWxsXEIAlYD79tdfg_TnFJCZKp';
+
+      // Import Supabase client
+      import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+      // Initialize Supabase (will fail gracefully if credentials not set)
+      let supabase = null;
+      if (SUPABASE_URL !== 'https://yjoxvdetqeisnzzmzimp.supabase.co') {
+        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+
+      // DOM Elements
+      const highScoresPill = document.getElementById('high-scores-pill');
+      const topScoreDisplay = document.getElementById('top-score-display');
+      const highScoresModal = document.getElementById('high-scores-modal');
+      const closeHighScores = document.getElementById('close-high-scores');
+      const highScoresList = document.getElementById('high-scores-list');
+      const gameOverScoresList = document.getElementById('game-over-scores-list');
+      const initialsContainer = document.getElementById('initials-container');
+      const initialsInput = document.getElementById('initials-input');
+      const initialsSubmit = document.getElementById('initials-submit');
+
+      // High scores cache
+      let highScores = [];
+      const MAX_SCORES = 10;
+
+      // Fetch high scores from Supabase
+      async function fetchHighScores() {
+        if (!supabase) {
+          console.log('Supabase not configured - using placeholder data');
+          highScores = [
+            { initials: 'ROB', score: 150 },
+            { initials: 'AAA', score: 100 },
+            { initials: 'ZZZ', score: 50 }
+          ];
+          updateHighScoresDisplay();
+          return;
+        }
+
+        try {
+          const { data, error } = await supabase
+            .from('high_scores')
+            .select('initials, score')
+            .order('score', { ascending: false })
+            .limit(MAX_SCORES);
+
+          if (error) throw error;
+          highScores = data || [];
+          updateHighScoresDisplay();
+        } catch (err) {
+          console.error('Error fetching high scores:', err);
+        }
+      }
+
+      // Submit a new high score
+      async function submitHighScore(initials, score) {
+        if (!supabase) {
+          console.log('Supabase not configured - score not saved');
+          // Add to local cache for demo purposes
+          highScores.push({ initials: initials.toUpperCase(), score });
+          highScores.sort((a, b) => b.score - a.score);
+          highScores = highScores.slice(0, MAX_SCORES);
+          updateHighScoresDisplay();
+          return true;
+        }
+
+        try {
+          const { error } = await supabase
+            .from('high_scores')
+            .insert([{ initials: initials.toUpperCase(), score }]);
+
+          if (error) throw error;
+          await fetchHighScores();
+          return true;
+        } catch (err) {
+          console.error('Error submitting score:', err);
+          return false;
+        }
+      }
+
+      // Check if score qualifies for leaderboard
+      function scoreQualifies(score) {
+        if (score <= 0) return false;
+        if (highScores.length < MAX_SCORES) return true;
+        return score > highScores[highScores.length - 1].score;
+      }
+
+      // Update the high scores displays
+      function updateHighScoresDisplay() {
+        // Update top score on pill
+        if (highScores.length > 0) {
+          topScoreDisplay.textContent = highScores[0].score;
+        } else {
+          topScoreDisplay.textContent = '---';
+        }
+
+        // Update both score lists
+        const listHTML = highScores.length > 0
+          ? highScores.map((entry, i) => {
+              let rankClass = '';
+              if (i === 0) rankClass = 'gold';
+              else if (i === 1) rankClass = 'silver';
+              else if (i === 2) rankClass = 'bronze';
+              return `<li>
+                <span class="rank ${rankClass}">${i + 1}.</span>
+                <span class="initials">${entry.initials}</span>
+                <span class="score">${entry.score}</span>
+              </li>`;
+            }).join('')
+          : '<li><span class="rank">-</span><span class="initials">---</span><span class="score">-</span></li>';
+
+        highScoresList.innerHTML = listHTML;
+        gameOverScoresList.innerHTML = listHTML;
+      }
+
+      // Show/hide high scores modal
+      highScoresPill.addEventListener('click', () => {
+        highScoresModal.classList.toggle('visible');
+      });
+
+      closeHighScores.addEventListener('click', () => {
+        highScoresModal.classList.remove('visible');
+      });
+
+      // Close modal when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!highScoresModal.contains(e.target) && !highScoresPill.contains(e.target)) {
+          highScoresModal.classList.remove('visible');
+        }
+      });
+
+      // Handle initials submission
+      initialsSubmit.addEventListener('click', async () => {
+        const initials = initialsInput.value.trim().toUpperCase();
+        if (initials.length < 1 || initials.length > 3) {
+          return;
+        }
+
+        initialsSubmit.disabled = true;
+        initialsSubmit.textContent = '...';
+
+        const score = parseInt(document.getElementById('final-score').textContent);
+        const success = await submitHighScore(initials, score);
+
+        if (success) {
+          initialsContainer.classList.remove('visible');
+          initialsInput.value = '';
+        }
+
+        initialsSubmit.disabled = false;
+        initialsSubmit.textContent = 'Save';
+      });
+
+      // Allow enter key to submit
+      initialsInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          initialsSubmit.click();
+        }
+      });
+
+      // Expose function to show initials input on game over
+      window.checkHighScore = function(score) {
+        if (scoreQualifies(score)) {
+          initialsContainer.classList.add('visible');
+          setTimeout(() => initialsInput.focus(), 100);
+        }
+      };
+
+      // Expose function to hide initials input on reset
+      window.resetHighScoreInput = function() {
+        initialsContainer.classList.remove('visible');
+        initialsInput.value = '';
+      };
+
+      // Initial fetch
+      fetchHighScores();
+    </script>
+
+
     
 </body>
 </html>
