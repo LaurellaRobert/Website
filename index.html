@@ -3427,11 +3427,8 @@ I hold a PhD in English from the University of Oxford, an MA from the University
       // Import Supabase client
       import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-      // Initialize Supabase (will fail gracefully if credentials not set)
-      let supabase = null;
-      if (SUPABASE_URL !== 'https://yjoxvdetqeisnzzmzimp.supabase.co') {
-        supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      }
+      // Initialize Supabase
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
       // DOM Elements
       const highScoresPill = document.getElementById('high-scores-pill');
