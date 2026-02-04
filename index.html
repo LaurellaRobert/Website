@@ -7,14 +7,19 @@
   <link rel="icon" type="image/png" href="favicon.png">
   <title>Robert Laurella</title>
   <style>
+    :root {
+      --terminal-bar-height: 29px; /* padding (12px) + font (12px) + border (1px) + buffer (4px) */
+    }
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
+      padding-bottom: var(--terminal-bar-height);
       display: flex;
       min-height: 100vh;
       height: 100vh;
       overflow: hidden;
+      box-sizing: border-box;
     }
     .content {
       flex: 0 0 65%;
@@ -63,10 +68,9 @@
       align-items: center;
       justify-content: center;
       background: #f9f9f9;
-      min-height: 100vh;
-      height: 100vh;
+      min-height: 100%;
+      height: 100%;
       position: relative;
-      padding-bottom: 35px;
       box-sizing: border-box;
     }
     .social-links {
@@ -1360,7 +1364,7 @@ I hold a PhD in English from the University of Oxford, an MA from the University
 
   <div class="animation-panel">
     <div class="conversion-counter" id="conversion-counter">
-      <span class="counter-value">0</span> captured
+      <span class="counter-value">0</span> score
     </div>
     <div class="high-scores-pill" id="high-scores-pill">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -2472,8 +2476,20 @@ I hold a PhD in English from the University of Oxford, an MA from the University
       const counterValue = counterElement.querySelector('.counter-value');
 
       function updateConversionCounter() {
-        conversionCount++;
+        // Calculate point multiplier: 1 base + 1 per 1000 points
+        const multiplier = 1 + Math.floor(conversionCount / MULTIPLIER_MILESTONE);
+        conversionCount += multiplier;
         counterValue.textContent = conversionCount;
+
+        // Check lava border milestone (every 500 points)
+        const currentLavaMilestone = Math.floor(conversionCount / LAVA_MILESTONE);
+        if (currentLavaMilestone > lastLavaMilestone) {
+          lastLavaMilestone = currentLavaMilestone;
+          lavaBorderThickness += LAVA_INCREMENT;
+          triggerScreenFlash('rgba(255, 100, 0,'); // Orange flash for lava warning
+          // Push particles away from the new lava border
+          pushParticlesFromLava();
+        }
 
         // Pulse animation on update
         counterElement.classList.remove('pulse');
@@ -2884,30 +2900,35 @@ I hold a PhD in English from the University of Oxford, an MA from the University
       triggerAutoDemo();
       window.triggerAutoDemo = triggerAutoDemo; // Expose for terminal command
 
-      // Respawn particles from edges
+      // Respawn particles from edges (inside lava border safe zone)
       function spawnParticleFromEdge() {
         const particle = new Particle();
-        // Spawn from a random edge
+        // Spawn just inside the lava border
+        const margin = lavaBorderThickness + 5;
+        const safeWidth = canvas.width - margin * 2;
+        const safeHeight = canvas.height - margin * 2;
+
+        // Spawn from a random edge of the safe zone
         const edge = Math.floor(Math.random() * 4);
         switch (edge) {
           case 0: // Top
-            particle.x = Math.random() * canvas.width;
-            particle.y = 0;
+            particle.x = margin + Math.random() * safeWidth;
+            particle.y = margin;
             particle.vy = Math.random() * 0.5 + 0.2;
             break;
           case 1: // Right
-            particle.x = canvas.width;
-            particle.y = Math.random() * canvas.height;
+            particle.x = canvas.width - margin;
+            particle.y = margin + Math.random() * safeHeight;
             particle.vx = -(Math.random() * 0.5 + 0.2);
             break;
           case 2: // Bottom
-            particle.x = Math.random() * canvas.width;
-            particle.y = canvas.height;
+            particle.x = margin + Math.random() * safeWidth;
+            particle.y = canvas.height - margin;
             particle.vy = -(Math.random() * 0.5 + 0.2);
             break;
           case 3: // Left
-            particle.x = 0;
-            particle.y = Math.random() * canvas.height;
+            particle.x = margin;
+            particle.y = margin + Math.random() * safeHeight;
             particle.vx = Math.random() * 0.5 + 0.2;
             break;
         }
@@ -3006,6 +3027,15 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         screenFlash.color = color;
       }
 
+      // Lava border system - activates every 500 points, grows incrementally
+      let lavaBorderThickness = 0;
+      let lastLavaMilestone = 0;
+      const LAVA_MILESTONE = 500;
+      const LAVA_INCREMENT = 8; // Pixels added per milestone
+
+      // Point multiplier - every 1000 points, conversions worth +1 more
+      const MULTIPLIER_MILESTONE = 1000;
+
       function loseLife() {
         if (lives <= 0 || gameOver) return;
 
@@ -3081,6 +3111,9 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         starburstEffects = [];
         conversionCount = 0;
         counterValue.textContent = '0';
+        // Reset lava border system
+        lavaBorderThickness = 0;
+        lastLavaMilestone = 0;
       };
 
       // Shooting Star class
@@ -3308,9 +3341,73 @@ I hold a PhD in English from the University of Oxford, an MA from the University
       // Start the shooting star spawner after initial delay
       setTimeout(scheduleNextShootingStar, 8000);
 
+      // Draw lava border
+      function drawLavaBorder() {
+        if (lavaBorderThickness <= 0) return;
+
+        // Very slow, subtle animation (10 second cycle)
+        const time = Date.now() / 10000;
+        ctx.save();
+
+        // Create subtle animated lava gradient
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        const shift = (Math.sin(time * Math.PI * 2) + 1) / 2;
+        gradient.addColorStop(0, `hsl(${15 + shift * 10}, 100%, 50%)`);
+        gradient.addColorStop(0.5, `hsl(${5 + shift * 8}, 100%, 45%)`);
+        gradient.addColorStop(1, `hsl(${20 + shift * 10}, 100%, 50%)`);
+
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = lavaBorderThickness;
+        ctx.shadowColor = '#ff4400';
+        ctx.shadowBlur = 12 + shift * 4; // Subtle glow variation: 12-16
+
+        // Draw border as inset rectangle
+        const offset = lavaBorderThickness / 2;
+        ctx.strokeRect(offset, offset, canvas.width - lavaBorderThickness, canvas.height - lavaBorderThickness);
+
+        ctx.restore();
+      }
+
+      // Check if particle touches lava border
+      function isTouchingLava(particle) {
+        if (lavaBorderThickness <= 0) return false;
+        return (
+          particle.x <= lavaBorderThickness ||
+          particle.x >= canvas.width - lavaBorderThickness ||
+          particle.y <= lavaBorderThickness ||
+          particle.y >= canvas.height - lavaBorderThickness
+        );
+      }
+
+      // Push particles inward when lava border grows
+      function pushParticlesFromLava() {
+        const margin = lavaBorderThickness + 5; // Small buffer beyond lava
+        particles.forEach(particle => {
+          if (particle.x < margin) {
+            particle.x = margin;
+            particle.vx = Math.abs(particle.vx) + 0.5; // Push inward
+          }
+          if (particle.x > canvas.width - margin) {
+            particle.x = canvas.width - margin;
+            particle.vx = -Math.abs(particle.vx) - 0.5;
+          }
+          if (particle.y < margin) {
+            particle.y = margin;
+            particle.vy = Math.abs(particle.vy) + 0.5;
+          }
+          if (particle.y > canvas.height - margin) {
+            particle.y = canvas.height - margin;
+            particle.vy = -Math.abs(particle.vy) - 0.5;
+          }
+        });
+      }
+
       // Main animation loop with shooting stars
       function animateWithShootingStars() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw lava border first (behind everything)
+        drawLavaBorder();
 
         // If game over, just draw static particles and stop updates
         if (gameOver) {
@@ -3332,6 +3429,12 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         // Update particles and check for conversions
         particles = particles.filter(particle => {
           const shouldConvert = particle.update();
+
+          // Check lava border collision
+          if (isTouchingLava(particle)) {
+            loseLife();
+            return false; // Remove the particle
+          }
 
           if (shouldConvert) {
             conversionEffects.push(new ConversionEffect(particle.x, particle.y));
