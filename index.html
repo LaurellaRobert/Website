@@ -436,6 +436,31 @@
       color: #666;
       font-size: 11px;
     }
+    .terminal-cursor {
+      display: inline-block;
+      width: 7px;
+      height: 12px;
+      background: #00ff00;
+      margin-left: 4px;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink {
+      0%, 50% { opacity: 0.5; }
+      51%, 100% { opacity: 0; }
+    }
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    .terminal-bar {
+      animation: slideUp 0.5s ease-out 0.075s both;
+    }
     /* Dark mode styles */
     body.dark-mode {
       background: #1a1a1a;
@@ -1273,6 +1298,7 @@
       </div>
       <div class="terminal-segment terminal-hint-segment">
         <span class="terminal-hint">press <span style="color: #f92672;">/</span> to interact</span>
+        <span class="terminal-cursor"></span>
       </div>
     </div>
   </div>
@@ -1393,6 +1419,26 @@ I hold a PhD in English from the University of Oxford, an MA from the University
                 <span class="project-tag">requestAnimationFrame</span>
                 <span class="project-tag">Procedural Animation</span>
                 <span class="project-tag">Pixel Manipulation</span>
+              </div>
+            </a>
+
+            <a href="forest.html" class="project-card">
+              <div class="project-header">
+                <h3 class="project-card-title">Community Forest</h3>
+                <span class="project-arrow">→</span>
+              </div>
+              <div class="project-thesis">
+                <div class="project-thesis-label">Thesis</div>
+                <p class="project-thesis-text">I wanted to build a persistent, shared experience where visitors leave something behind that grows over time.</p>
+              </div>
+              <p class="project-desc">An AI-to-pixel-art pipeline using ImageMagick for dithering and palette reduction, backed by Supabase for persistent planting. The scene changes with time of day.</p>
+              <div class="project-tags">
+                <span class="project-tag">Supabase</span>
+                <span class="project-tag">PixiJS</span>
+                <span class="project-tag">ImageMagick</span>
+                <span class="project-tag">AI Image Generation</span>
+                <span class="project-tag">Time-Aware Design</span>
+                <span class="project-tag">Dithering</span>
               </div>
             </a>
 
@@ -2024,7 +2070,7 @@ I hold a PhD in English from the University of Oxford, an MA from the University
       // Command definitions
       const commands = {
         help: () => ({
-          text: 'ls · home · about · projects · theme · whoami · contact · hire · run · coffee · clear · reset',
+          text: 'ls · home · about · projects · theme · whoami · contact · hire · run · coffee · forest · clear · reset',
           type: 'success'
         }),
         ls: () => ({
@@ -2092,6 +2138,10 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         coffee: () => {
           window.open('https://shouldihaveacupof.coffee/', '_blank');
           return { text: '☕ opening...', type: 'success' };
+        },
+        forest: () => {
+          window.open('forest.html', '_blank');
+          return { text: '🌱 opening...', type: 'success' };
         },
         clear: () => {
           // Reset particles, game state, and demo
@@ -2904,9 +2954,9 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         }
       }
 
-      // Target particle count
+      // Target particle count (20% higher density)
       function getTargetParticleCount() {
-        return Math.floor((canvas.width * canvas.height) / 15000);
+        return Math.floor((canvas.width * canvas.height) / 12500);
       }
 
       // Initialize particles
@@ -3069,14 +3119,14 @@ I hold a PhD in English from the University of Oxford, an MA from the University
         screenFlash.color = color;
       }
 
-      // Lava border system - activates every 500 points, grows incrementally
+      // Lava border system - activates every 100 points, grows incrementally
       let lavaBorderThickness = 0;
       let lastLavaMilestone = 0;
-      const LAVA_MILESTONE = 500;
+      const LAVA_MILESTONE = 100;
       const LAVA_INCREMENT = 8; // Pixels added per milestone
 
-      // Point multiplier - every 1000 points, conversions worth +1 more
-      const MULTIPLIER_MILESTONE = 1000;
+      // Point multiplier - every 500 points, conversions worth +1 more
+      const MULTIPLIER_MILESTONE = 500;
 
       function loseLife() {
         if (lives <= 0 || gameOver) return;

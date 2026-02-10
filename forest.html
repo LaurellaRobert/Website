@@ -1286,8 +1286,16 @@
 
     // Supabase functions
     function checkCanPlant() {
-      // Testing mode: always allow planting
-      return true;
+      const lastPlanted = localStorage.getItem('forest_last_planted');
+      if (!lastPlanted) return true;
+
+      // Get today's date in EST
+      const now = new Date();
+      const estOptions = { timeZone: 'America/New_York' };
+      const todayEST = new Date(now.toLocaleString('en-US', estOptions)).toDateString();
+      const lastPlantedEST = new Date(new Date(lastPlanted).toLocaleString('en-US', estOptions)).toDateString();
+
+      return todayEST !== lastPlantedEST;
     }
 
     function showFeedback(message, duration = 3000) {
@@ -1352,10 +1360,9 @@
         plants.push(data[0]);
         await renderPlants();
 
-        // Testing mode: don't restrict planting
-        // localStorage.setItem('forest_last_planted', new Date().toISOString());
-        // canPlantToday = false;
-        // updatePlantingUI();
+        localStorage.setItem('forest_last_planted', new Date().toISOString());
+        canPlantToday = false;
+        updatePlantingUI();
 
         showFeedback('Planted a seed! It will bloom in 7 days.', 4000);
 
@@ -1394,7 +1401,6 @@
       updatePlantingUI();
 
       await initPixi();
-      await clearAllPlants(); // Testing: clear existing plants
       await fetchPlants();
 
       setInterval(fetchPlants, 300000);
