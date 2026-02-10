@@ -95,6 +95,28 @@
       gap: 0;
       margin-bottom: 25px;
       border-bottom: 2px solid #e0e0e0;
+      position: relative;
+    }
+    .forest-link {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6B8E5B;
+      text-decoration: none;
+      padding: 6px;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+    }
+    .forest-link:hover {
+      background: rgba(107, 142, 91, 0.1);
+      color: #5a7a4d;
+    }
+    .forest-link svg {
+      width: 20px;
+      height: 20px;
     }
     .tab-button {
       background: none;
@@ -474,6 +496,13 @@
       color: #e0e0e0;
       border-bottom-color: #e0e0e0;
     }
+    body.dark-mode .forest-link {
+      color: #7a9e6b;
+    }
+    body.dark-mode .forest-link:hover {
+      background: rgba(122, 158, 107, 0.15);
+      color: #9abe8b;
+    }
     body.dark-mode .terminal-code {
       background: #0a0a0a;
     }
@@ -510,19 +539,27 @@
       height: 100%;
       z-index: 1;
     }
-    .conversion-counter {
+    /* Stats container - holds score and high scores together */
+    .stats-container {
       position: absolute;
-      bottom: 40px;
+      bottom: 20px;
       right: 20px;
-      font-family: 'Courier New', monospace;
-      font-size: 11px;
-      color: #999;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
       z-index: 10;
+    }
+    .conversion-counter {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      font-weight: 600;
+      color: #777;
       transition: transform 0.2s ease;
     }
     .conversion-counter .counter-value {
       color: #9999ff;
-      font-weight: 500;
+      font-weight: 700;
       display: inline-block;
       min-width: 1ch;
     }
@@ -542,19 +579,16 @@
       50% { opacity: 1; }
     }
     body.dark-mode .conversion-counter {
-      color: #666;
+      color: #888;
     }
     body.dark-mode .conversion-counter .counter-value {
-      color: #9999ff;
+      color: #ababff;
     }
     body.dark-mode .animation-panel {
       background: #0a0a0a;
     }
     /* High scores pill */
     .high-scores-pill {
-      position: absolute;
-      top: 15px;
-      left: 15px;
       background: rgba(255, 255, 255, 0.9);
       border: 1px solid #ddd;
       border-radius: 20px;
@@ -563,7 +597,6 @@
       font-size: 10px;
       color: #888;
       cursor: pointer;
-      z-index: 10;
       transition: all 0.2s ease;
       display: flex;
       align-items: center;
@@ -1183,9 +1216,11 @@
         width: 220px;
         height: 220px;
       }
-      .conversion-counter {
+      .stats-container {
         bottom: 10px;
         right: 10px;
+      }
+      .conversion-counter {
         font-size: 10px;
       }
     }
@@ -1262,6 +1297,11 @@
           <button class="tab-button active" data-tab="home">Home</button>
           <button class="tab-button" data-tab="about">About</button>
           <button class="tab-button" data-tab="projects">Projects</button>
+          <a href="forest.html" class="forest-link" title="Visit the forest">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L7 9h2l-3 5h3l-4 6h14l-4-6h3l-3-5h2L12 2zm-1 18v2h2v-2h-2z"/>
+            </svg>
+          </a>
         </div>
       </div>
 
@@ -1363,14 +1403,16 @@ I hold a PhD in English from the University of Oxford, an MA from the University
   </div>
 
   <div class="animation-panel">
-    <div class="conversion-counter" id="conversion-counter">
-      <span class="counter-value">0</span> score
-    </div>
-    <div class="high-scores-pill" id="high-scores-pill">
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M6 9H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2M18 9h2a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2M6 3h12v7a6 6 0 0 1-12 0V3zM9 21h6M12 16v5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-      <span class="top-score" id="top-score-display">---</span>
+    <div class="stats-container">
+      <div class="conversion-counter" id="conversion-counter">
+        score <span class="counter-value">0</span>
+      </div>
+      <div class="high-scores-pill" id="high-scores-pill">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 9H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2M18 9h2a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2M6 3h12v7a6 6 0 0 1-12 0V3zM9 21h6M12 16v5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="top-score" id="top-score-display">---</span>
+      </div>
     </div>
     <div class="high-scores-modal" id="high-scores-modal">
       <button class="close-btn" id="close-high-scores">&times;</button>
@@ -3649,6 +3691,13 @@ I hold a PhD in English from the University of Oxford, an MA from the University
       // Close modal when clicking outside
       document.addEventListener('click', (e) => {
         if (!highScoresModal.contains(e.target) && !highScoresPill.contains(e.target)) {
+          highScoresModal.classList.remove('visible');
+        }
+      });
+
+      // Close modal with ESC key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
           highScoresModal.classList.remove('visible');
         }
       });

@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Forest</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://pixijs.download/v8.0.0/pixi.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      overflow: hidden;
+      font-family: 'Courier New', monospace;
+      background: #1a1a2e;
+    }
+
+    #forest-canvas {
+      display: block;
+    }
+
+    .back-link {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      color: #4a5a3a;
+      text-decoration: none;
+      font-size: 12px;
+      padding: 8px 12px;
+      background: rgba(245, 240, 230, 0.95);
+      border: 3px solid #8B7355;
+      z-index: 100;
+    }
+
+    .back-link:hover {
+      background: #E8E4D9;
+    }
+
+    .feedback {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(245, 240, 230, 0.95);
+      border: 3px solid #6B8E5B;
+      padding: 10px 16px;
+      font-size: 12px;
+      color: #3a4a2a;
+      z-index: 100;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .feedback.show {
+      opacity: 1;
+    }
+
+    .plant-button {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #E8E4D9;
+      border: 2px solid #6B5344;
+      border-radius: 2px;
+      padding: 10px 20px 10px 14px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      z-index: 100;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      /* Pixel-art inner highlight/shadow */
+      box-shadow:
+        0 2px 0 #4A3A2A,
+        inset 1px 1px 0 #F0F4F8,
+        inset -1px -1px 0 #A8B8C8;
+      transition: transform 0.05s, box-shadow 0.05s;
+    }
+
+    .plant-button:hover {
+      background: #F0EDE4;
+      border-color: #8BAB6B;
+      box-shadow:
+        0 2px 0 #4A3A2A,
+        0 0 0 1px #F0D060,
+        inset 1px 1px 0 #F0F4F8,
+        inset -1px -1px 0 #A8B8C8;
+    }
+
+    .plant-button:active {
+      transform: translateX(-50%) translateY(2px);
+      background: #D4CFC4;
+      box-shadow:
+        inset 1px 1px 0 #A8B8C8,
+        inset -1px -1px 0 #F0F4F8;
+    }
+
+    .plant-button.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      filter: grayscale(60%);
+    }
+
+    .plant-button.disabled:hover {
+      background: #E8E4D9;
+      border-color: #6B5344;
+      box-shadow:
+        0 2px 0 #4A3A2A,
+        inset 1px 1px 0 #F0F4F8,
+        inset -1px -1px 0 #A8B8C8;
+    }
+
+    .plant-button-icon {
+      width: 28px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .plant-button-icon img {
+      max-width: 100%;
+      max-height: 100%;
+      image-rendering: pixelated;
+    }
+
+    .plant-button-label {
+      font-size: 13px;
+      font-weight: bold;
+      color: #4A3A2A;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="forest-canvas"></canvas>
+
+  <a href="index.html" class="back-link">&lt; back</a>
+  <div class="feedback" id="feedback"></div>
+
+  <button class="plant-button" id="plantButton" title="Click anywhere in the garden to plant">
+    <span class="plant-button-icon">
+      <img src="assets/sprites/plant_seed.png" alt="seed">
+    </span>
+    <span class="plant-button-label">Plant</span>
+  </button>
+
+  <script type="module">
+    // Supabase setup
+    const SUPABASE_URL = 'https://yjoxvdetqeisnzzmzimp.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_DZhyxoWxsXEIAlYD79tdfg_TnFJCZKp';
+    let supabaseClient = null;
+
+    // Plant growth: 7 days total (seed 0-2, bud 3-5, flower 6+)
+    const GROWTH_DAYS = 7;
+
+    // State
+    let selectedPlant = 'flower';
+    let plants = [];
+    let canPlantToday = true;
+    let app = null;
+    let plantSprites = [];
+    let cloudSprites = [];
+    let butterflySprites = [];
+    let butterflyTextures = [];
+    let leafSprites = [];
+    let foregroundGrassSprites = [];
+    let foregroundGrassTextures = [];
+    let tulipSprites = [];
+    let tulipTextures = [];
+    let cauldronSprites = [];
+    let cauldronTextures = [];
+    let starSprites = [];
+    let time = 0;
+
+    // DOM elements
+    const feedback = document.getElementById('feedback');
+    const plantButton = document.getElementById('plantButton');
+
+    // Time of day colors - 5-band sky gradient + star visibility
+    function getTimeColors() {
+      const hour = new Date().getHours();
+
+      // Dawn (5-7am) - warm pinks and oranges emerging
+      if (hour >= 5 && hour < 7) {
+        return {
+          sky: [
+            0x2D1B4E,  // deep purple at top
+            0x6B3A6B,  // mauve
+            0xD4A574,  // warm peach
+            0xE8C4A0,  // pale orange
+            0xF0DCC8   // cream at horizon
+          ],
+          hillFar: 0x8B7B9B,
+          hillNear: 0x6B8E7B,
+          ground: 0x7A9B6D,
+          dirt: 0x8B7355,
+          starAlpha: 0.3  // stars fading out
+        };
+      }
+      // Day (7am-5pm) - bright blue sky
+      else if (hour >= 7 && hour < 17) {
+        return {
+          sky: [
+            0x4A90C2,  // deeper blue at top
+            0x6BB0D8,  // mid blue
+            0x8BC8E8,  // light blue
+            0xB8DDF0,  // pale blue
+            0xD4EBF5   // almost white at horizon
+          ],
+          hillFar: 0x8B9DB8,
+          hillNear: 0x6B8E7B,
+          ground: 0x7A9B6D,
+          dirt: 0x8B7355,
+          starAlpha: 0  // no stars during day
+        };
+      }
+      // Golden hour (5-7pm) - warm sunset
+      else if (hour >= 17 && hour < 19) {
+        return {
+          sky: [
+            0x4B3068,  // purple at top
+            0x8B4878,  // magenta
+            0xD87850,  // orange
+            0xE8A060,  // golden
+            0xF0C878   // pale yellow at horizon
+          ],
+          hillFar: 0x7B6080,
+          hillNear: 0x5B7060,
+          ground: 0x6A8A5D,
+          dirt: 0x7A6345,
+          starAlpha: 0.2  // stars beginning to appear
+        };
+      }
+      // Dusk (7-9pm) - deep sunset into night
+      else if (hour >= 19 && hour < 21) {
+        return {
+          sky: [
+            0x1A1030,  // near black at top
+            0x3B2060,  // deep purple
+            0x6B3858,  // wine
+            0xA85050,  // dusky red
+            0xC87060   // muted orange at horizon
+          ],
+          hillFar: 0x4B3858,
+          hillNear: 0x3B4838,
+          ground: 0x4A6A3D,
+          dirt: 0x5A4335,
+          starAlpha: 0.7  // stars becoming visible
+        };
+      }
+      // Night (9pm-5am) - deep night sky
+      else {
+        return {
+          sky: [
+            0x0A0A18,  // almost black at top
+            0x141428,  // very dark blue
+            0x1E1E3A,  // dark purple-blue
+            0x2A2A4A,  // muted indigo
+            0x3A3A5A   // slightly lighter at horizon
+          ],
+          hillFar: 0x1a1a38,
+          hillNear: 0x0a1a18,
+          ground: 0x2A3A2D,
+          dirt: 0x3A2A25,
+          starAlpha: 1  // full star visibility
+        };
+      }
+    }
+
+    // Initialize PixiJS
+    async function initPixi() {
+      app = new PIXI.Application();
+
+      await app.init({
+        canvas: document.getElementById('forest-canvas'),
+        width: window.innerWidth,
+        height: window.innerHeight,
+        backgroundColor: 0x7BB8D8,
+        resolution: window.devicePixelRatio || 1,
+        autoDensity: true
+      });
+
+      // Enable crisp pixel rendering
+      PIXI.TextureSource.defaultOptions.scaleMode = 'nearest';
+
+      await createScene();
+
+      // Animation loop
+      app.ticker.add((ticker) => {
+        time += ticker.deltaTime * 0.01;
+        animatePlants();
+        animateClouds();
+        animateButterflies();
+        animateFallingLeaves();
+        animateForegroundGrass();
+        animateTulips();
+        animateCauldrons();
+        animateStars();
+      });
+
+      // Handle resize
+      window.addEventListener('resize', async () => {
+        app.renderer.resize(window.innerWidth, window.innerHeight);
+        // Recreate scene on resize
+        app.stage.removeChildren();
+        await createScene();
+        renderPlants();
+      });
+
+      // Handle clicks for planting
+      app.stage.eventMode = 'static';
+      app.stage.hitArea = app.screen;
+      app.stage.on('pointerdown', onPlantClick);
+    }
+
+    async function createScene() {
+      const w = app.screen.width;
+      const h = app.screen.height;
+      const colors = getTimeColors();
+      const skyHeight = h * 0.35; // Sky ends where ground begins
+      const hour = new Date().getHours();
+      const isDaytime = hour >= 7 && hour < 17;
+
+      // Sky background - load appropriate image based on time of day
+      let skyImagePath;
+      if (hour >= 5 && hour < 7) {
+        skyImagePath = 'assets/sprites/sky_dawn.png';
+      } else if (hour >= 7 && hour < 17) {
+        skyImagePath = 'assets/sprites/sky_day.png';
+      } else if (hour >= 17 && hour < 19) {
+        skyImagePath = 'assets/sprites/sky_golden.png';
+      } else if (hour >= 19 && hour < 21) {
+        skyImagePath = 'assets/sprites/sky_dusk.png';
+      } else {
+        skyImagePath = 'assets/sprites/sky_night.png';
+      }
+
+      const skyTexture = await PIXI.Assets.load(skyImagePath);
+      const sky = new PIXI.Sprite(skyTexture);
+      // Scale to cover sky area
+      const scaleX = w / skyTexture.width;
+      const scaleY = skyHeight / skyTexture.height;
+      sky.scale.set(scaleX, scaleY);
+      sky.x = 0;
+      sky.y = 0;
+      app.stage.addChild(sky);
+
+      // Stars (only if starAlpha > 0)
+      if (colors.starAlpha > 0) {
+        createStars(w, skyHeight, colors.starAlpha);
+      } else {
+        starSprites = []; // Clear stars during day
+      }
+
+      // Sun visible 6am-7pm, moon otherwise
+      if (hour >= 6 && hour < 19) {
+        const sunTexture = await PIXI.Assets.load('assets/sprites/sun.png');
+        const sun = new PIXI.Sprite(sunTexture);
+        sun.x = w - 120;
+        sun.y = 20;
+        sun.scale.set(1.2);
+        app.stage.addChild(sun);
+      } else {
+        const moonTexture = await PIXI.Assets.load('assets/sprites/moon.png');
+        const moon = new PIXI.Sprite(moonTexture);
+        moon.x = w - 120;
+        moon.y = 20;
+        moon.scale.set(1.2);
+        app.stage.addChild(moon);
+      }
+
+      // Clouds
+      await createClouds(w, h, colors);
+
+      // Far hills (stepped pixel look)
+      const hillFar = new PIXI.Graphics();
+      hillFar.fill(colors.hillFar);
+      drawPixelHill(hillFar, w, h * 0.28, h * 0.12, 8);
+      app.stage.addChild(hillFar);
+
+      // Near hills
+      const hillNear = new PIXI.Graphics();
+      hillNear.fill(colors.hillNear);
+      drawPixelHill(hillNear, w, h * 0.35, h * 0.10, 6);
+      app.stage.addChild(hillNear);
+
+      // Ground - randomly placed grass tile variants
+      const grassTextures = await Promise.all([
+        PIXI.Assets.load('assets/sprites/grass1.png'),
+        PIXI.Assets.load('assets/sprites/grass4.png')
+      ]);
+
+      const tileScale = 2;
+      const tileSize = 32 * tileScale;
+      const groundContainer = new PIXI.Container();
+      const groundY = h * 0.35;
+      const groundHeight = h * 0.65;
+
+      const cols = Math.ceil(w / tileSize) + 1;
+      const rows = Math.ceil(groundHeight / tileSize) + 1;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const texture = grassTextures[Math.floor(Math.random() * grassTextures.length)];
+          const tile = new PIXI.Sprite(texture);
+          tile.scale.set(tileScale);
+          tile.x = col * tileSize;
+          tile.y = row * tileSize;
+          groundContainer.addChild(tile);
+        }
+      }
+
+      groundContainer.y = groundY;
+      app.stage.addChild(groundContainer);
+
+      // Garden area (dirt bed for planting)
+      await createGarden(w, h, groundY);
+
+      // Animated tulips outside the garden
+      await createAnimatedTulips(w, h, groundY);
+
+      // Animated cauldron (using spritesheet)
+      await createAnimatedCauldrons(w, h, groundY);
+
+      // Scatter decorations
+      await createScatterDecorations(w, h, groundY);
+
+      // Tree border
+      await createTreeBorder(w, h, groundY);
+
+      // Plant container (for z-ordering)
+      app.stage.plantContainer = new PIXI.Container();
+      app.stage.addChild(app.stage.plantContainer);
+
+      // Butterflies (daytime only)
+      if (isDaytime) {
+        await createButterflies(w, h, groundY);
+      }
+
+      // Falling leaves
+      await createFallingLeaves(w, h, groundY);
+
+      // Foreground grass (rendered last, on top of everything)
+      await createForegroundGrass(w, h);
+    }
+
+    // Garden bounds (percentages of screen)
+    const GARDEN = {
+      x: 0.25,      // 25% from left
+      y: 0.35,      // 35% down from groundY
+      width: 0.50,  // 50% of screen width
+      height: 0.40  // 40% of ground height
+    };
+
+    async function createGarden(w, h, groundY) {
+      // Load all dirt texture variants
+      const dirtTextures = await Promise.all([
+        PIXI.Assets.load('assets/sprites/dirt.png'),
+        PIXI.Assets.load('assets/sprites/dirt2.png'),
+        PIXI.Assets.load('assets/sprites/dirt3.png')
+      ]);
+
+      const gardenContainer = new PIXI.Container();
+      const groundHeight = h - groundY;
+
+      // Calculate garden pixel bounds
+      const gardenX = w * GARDEN.x;
+      const gardenY = groundY + groundHeight * GARDEN.y;
+      const gardenW = w * GARDEN.width;
+      const gardenH = groundHeight * GARDEN.height;
+
+      // Store bounds for planting validation
+      app.gardenBounds = { x: gardenX, y: gardenY, width: gardenW, height: gardenH };
+
+      // Tile the garden with dirt (randomly selecting texture variants)
+      const tileSize = 32; // dirt tile is 32x32
+      const cols = Math.ceil(gardenW / tileSize) + 1;
+      const rows = Math.ceil(gardenH / tileSize) + 1;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const texture = dirtTextures[Math.floor(Math.random() * dirtTextures.length)];
+          const tile = new PIXI.Sprite(texture);
+          tile.x = gardenX + col * tileSize;
+          tile.y = gardenY + row * tileSize;
+          gardenContainer.addChild(tile);
+        }
+      }
+
+      // Mask to clip dirt to garden bounds
+      const mask = new PIXI.Graphics();
+      mask.rect(gardenX, gardenY, gardenW, gardenH);
+      mask.fill(0xffffff);
+      gardenContainer.mask = mask;
+      app.stage.addChild(mask);
+
+      app.stage.addChild(gardenContainer);
+
+      // Add stone path border around garden
+      const pathTexture = await PIXI.Assets.load('assets/sprites/path.png');
+      // Load different corner decorations
+      const wellTexture = await PIXI.Assets.load('assets/sprites/corner_block.png');
+      const birdBathTexture = await PIXI.Assets.load('assets/sprites/bird_bath.png');
+      const teapotTexture = await PIXI.Assets.load('assets/sprites/teapot_planter.png');
+      const gnomeTexture = await PIXI.Assets.load('assets/sprites/garden_gnome.png');
+      const pathSize = 32;
+
+      // Calculate tile counts (exclude corners)
+      const pathColsH = Math.ceil(gardenW / pathSize) - 1;
+      const pathRowsV = Math.ceil(gardenH / pathSize) - 1;
+
+      // Top edge (horizontal - rotate 90°)
+      for (let col = 0; col < pathColsH; col++) {
+        const tile = new PIXI.Sprite(pathTexture);
+        tile.anchor.set(0.5, 0.5);
+        tile.rotation = Math.PI / 2;
+        tile.x = gardenX + pathSize + pathSize / 2 + col * pathSize;
+        tile.y = gardenY - pathSize / 2;
+        app.stage.addChild(tile);
+      }
+
+      // Bottom edge (horizontal - rotate 90°)
+      for (let col = 0; col < pathColsH; col++) {
+        const tile = new PIXI.Sprite(pathTexture);
+        tile.anchor.set(0.5, 0.5);
+        tile.rotation = Math.PI / 2;
+        tile.x = gardenX + pathSize + pathSize / 2 + col * pathSize;
+        tile.y = gardenY + gardenH + pathSize / 2;
+        app.stage.addChild(tile);
+      }
+
+      // Left edge (vertical - no rotation)
+      for (let row = 0; row < pathRowsV; row++) {
+        const tile = new PIXI.Sprite(pathTexture);
+        tile.x = gardenX - pathSize;
+        tile.y = gardenY + row * pathSize;
+        app.stage.addChild(tile);
+      }
+
+      // Right edge (vertical - no rotation)
+      for (let row = 0; row < pathRowsV; row++) {
+        const tile = new PIXI.Sprite(pathTexture);
+        tile.x = gardenX + gardenW;
+        tile.y = gardenY + row * pathSize;
+        app.stage.addChild(tile);
+      }
+
+      // Corner decorations (different items at each corner)
+      // Top-left corner - Well
+      const cornerTL = new PIXI.Sprite(wellTexture);
+      cornerTL.anchor.set(0.5, 0.5);
+      cornerTL.x = gardenX - pathSize / 2;
+      cornerTL.y = gardenY - pathSize / 2;
+      app.stage.addChild(cornerTL);
+
+      // Top-right corner - Bird bath
+      const cornerTR = new PIXI.Sprite(birdBathTexture);
+      cornerTR.anchor.set(0.5, 0.5);
+      cornerTR.x = gardenX + gardenW + pathSize / 2;
+      cornerTR.y = gardenY - pathSize / 2;
+      app.stage.addChild(cornerTR);
+
+      // Bottom-left corner - Teapot planter
+      const cornerBL = new PIXI.Sprite(teapotTexture);
+      cornerBL.anchor.set(0.5, 0.5);
+      cornerBL.x = gardenX - pathSize / 2;
+      cornerBL.y = gardenY + gardenH + pathSize / 2;
+      app.stage.addChild(cornerBL);
+
+      // Bottom-right corner - Garden gnome
+      const cornerBR = new PIXI.Sprite(gnomeTexture);
+      cornerBR.anchor.set(0.5, 0.5);
+      cornerBR.x = gardenX + gardenW + pathSize / 2;
+      cornerBR.y = gardenY + gardenH + pathSize / 2;
+      app.stage.addChild(cornerBR);
+    }
+
+    async function createAnimatedTulips(w, h, groundY) {
+      // Load tulip animation frames (split from spritesheet)
+      tulipTextures = await Promise.all([
+        PIXI.Assets.load('assets/sprites/tulip1.png'),
+        PIXI.Assets.load('assets/sprites/tulip2.png'),
+        PIXI.Assets.load('assets/sprites/tulip3.png')
+      ]);
+
+      tulipSprites = [];
+      const groundHeight = h - groundY;
+
+      // Tulip positions OUTSIDE the garden (as percentages of screen/ground)
+      // Garden occupies x: 0.25-0.75, y: 0.35-0.75 of ground
+      const tulipPositions = [
+        // Left side of garden
+        { x: 0.12, y: 0.42 },
+        { x: 0.18, y: 0.58 },
+        { x: 0.08, y: 0.68 },
+        // Right side of garden
+        { x: 0.82, y: 0.40 },
+        { x: 0.88, y: 0.52 },
+        { x: 0.78, y: 0.68 },
+        // Below garden
+        { x: 0.45, y: 0.82 },
+        { x: 0.58, y: 0.85 }
+      ];
+
+      tulipPositions.forEach((pos, index) => {
+        const tulip = new PIXI.Sprite(tulipTextures[0]);
+        tulip.anchor.set(0.5, 1);
+        tulip.x = w * pos.x;
+        tulip.y = groundY + groundHeight * pos.y;
+
+        // Animation properties
+        tulip.frameIndex = index % 3; // Stagger starting frames
+        tulip.frameTimer = 0;
+        tulip.frameSpeed = 0.02 + Math.random() * 0.01; // Slow, varied speed
+
+        app.stage.addChild(tulip);
+        tulipSprites.push(tulip);
+      });
+    }
+
+    function animateTulips() {
+      if (!tulipSprites.length || !tulipTextures.length) return;
+
+      tulipSprites.forEach(tulip => {
+        tulip.frameTimer += tulip.frameSpeed;
+        if (tulip.frameTimer >= 1) {
+          tulip.frameTimer = 0;
+          tulip.frameIndex = (tulip.frameIndex + 1) % 3;
+          tulip.texture = tulipTextures[tulip.frameIndex];
+        }
+      });
+    }
+
+    async function createAnimatedCauldrons(w, h, groundY) {
+      // Load the spritesheet as a single texture
+      const sheetTexture = await PIXI.Assets.load('assets/sprites/cauldron_sheet.png');
+
+      // Frame widths: 30, 30, 32, 31 (total 123px)
+      const frameData = [
+        { x: 0, width: 30 },
+        { x: 30, width: 30 },
+        { x: 60, width: 32 },
+        { x: 92, width: 31 }
+      ];
+
+      // Slice textures from spritesheet using PixiJS v8 API
+      cauldronTextures = frameData.map(frame => {
+        return new PIXI.Texture({
+          source: sheetTexture.source,
+          frame: new PIXI.Rectangle(frame.x, 0, frame.width, 32)
+        });
+      });
+
+      cauldronSprites = [];
+      const groundHeight = h - groundY;
+
+      // Place cauldron above the garden
+      const cauldronPositions = [
+        { x: 0.50, y: 0.22 }
+      ];
+
+      cauldronPositions.forEach((pos, index) => {
+        const cauldron = new PIXI.Sprite(cauldronTextures[0]);
+        cauldron.anchor.set(0.5, 1);
+        cauldron.x = w * pos.x;
+        cauldron.y = groundY + groundHeight * pos.y;
+
+        cauldron.frameIndex = 0;
+        cauldron.frameTimer = 0;
+        cauldron.frameSpeed = 0.08;
+
+        app.stage.addChild(cauldron);
+        cauldronSprites.push(cauldron);
+      });
+    }
+
+    function animateCauldrons() {
+      if (!cauldronSprites.length || !cauldronTextures.length) return;
+
+      cauldronSprites.forEach(cauldron => {
+        cauldron.frameTimer += cauldron.frameSpeed;
+        if (cauldron.frameTimer >= 1) {
+          cauldron.frameTimer = 0;
+          cauldron.frameIndex = (cauldron.frameIndex + 1) % 4;
+          cauldron.texture = cauldronTextures[cauldron.frameIndex];
+        }
+      });
+    }
+
+    function createStars(w, skyHeight, baseAlpha) {
+      starSprites = [];
+
+      // Configuration for star variety
+      const starCount = Math.floor((w * skyHeight) / 8000); // Density based on sky area
+      const smallStarCount = Math.floor(starCount * 0.7);
+      const mediumStarCount = Math.floor(starCount * 0.2);
+      const largeSparkleCount = Math.floor(starCount * 0.1);
+
+      // Small stars (simple dots, 1-2px)
+      for (let i = 0; i < smallStarCount; i++) {
+        const star = new PIXI.Graphics();
+        const size = Math.random() > 0.5 ? 1 : 2;
+        const brightness = 0.5 + Math.random() * 0.5;
+
+        star.rect(0, 0, size, size);
+        star.fill(0xFFFFFF);
+
+        star.x = Math.random() * w;
+        star.y = Math.random() * skyHeight * 0.85; // Keep stars in upper sky
+        star.alpha = baseAlpha * brightness;
+
+        // Twinkle properties
+        star.baseAlpha = baseAlpha * brightness;
+        star.twinkleSpeed = 0.02 + Math.random() * 0.03;
+        star.twinkleOffset = Math.random() * Math.PI * 2;
+        star.twinkleAmount = 0.3 + Math.random() * 0.4;
+        star.starType = 'small';
+
+        app.stage.addChild(star);
+        starSprites.push(star);
+      }
+
+      // Medium stars (slightly larger, 2-3px with glow effect)
+      for (let i = 0; i < mediumStarCount; i++) {
+        const star = new PIXI.Graphics();
+
+        // Core
+        star.rect(0, 0, 2, 2);
+        star.fill(0xFFFFFF);
+        // Slight glow pixels
+        star.rect(-1, 0, 1, 2);
+        star.rect(2, 0, 1, 2);
+        star.rect(0, -1, 2, 1);
+        star.rect(0, 2, 2, 1);
+        star.fill(0xAABBDD);
+
+        star.x = Math.random() * w;
+        star.y = Math.random() * skyHeight * 0.8;
+        star.alpha = baseAlpha * 0.9;
+
+        star.baseAlpha = baseAlpha * 0.9;
+        star.twinkleSpeed = 0.015 + Math.random() * 0.02;
+        star.twinkleOffset = Math.random() * Math.PI * 2;
+        star.twinkleAmount = 0.2 + Math.random() * 0.3;
+        star.starType = 'medium';
+
+        app.stage.addChild(star);
+        starSprites.push(star);
+      }
+
+      // Large sparkle stars (cross shape, pixel art style)
+      for (let i = 0; i < largeSparkleCount; i++) {
+        const star = new PIXI.Graphics();
+
+        // Draw pixel-art cross sparkle
+        // Center bright core
+        star.rect(1, 1, 2, 2);
+        star.fill(0xFFFFFF);
+
+        // Horizontal arms
+        star.rect(-2, 1, 3, 2);
+        star.rect(3, 1, 3, 2);
+        star.fill(0xDDEEFF);
+
+        // Vertical arms
+        star.rect(1, -2, 2, 3);
+        star.rect(1, 3, 2, 3);
+        star.fill(0xDDEEFF);
+
+        // Outer glow pixels (corners of the cross)
+        star.rect(-1, 0, 1, 1);
+        star.rect(-1, 3, 1, 1);
+        star.rect(4, 0, 1, 1);
+        star.rect(4, 3, 1, 1);
+        star.rect(0, -1, 1, 1);
+        star.rect(3, -1, 1, 1);
+        star.rect(0, 4, 1, 1);
+        star.rect(3, 4, 1, 1);
+        star.fill(0x8899BB);
+
+        star.x = Math.random() * w;
+        star.y = Math.random() * skyHeight * 0.7; // Large stars higher up
+        star.alpha = baseAlpha;
+
+        star.baseAlpha = baseAlpha;
+        star.twinkleSpeed = 0.01 + Math.random() * 0.015;
+        star.twinkleOffset = Math.random() * Math.PI * 2;
+        star.twinkleAmount = 0.15 + Math.random() * 0.25;
+        star.starType = 'large';
+
+        // Some large stars have a slower "pulse" effect
+        star.pulsePhase = Math.random() * Math.PI * 2;
+        star.pulseSpeed = 0.005 + Math.random() * 0.005;
+
+        app.stage.addChild(star);
+        starSprites.push(star);
+      }
+    }
+
+    function animateStars() {
+      if (!starSprites.length) return;
+
+      starSprites.forEach(star => {
+        // Basic twinkle (sine wave alpha modulation)
+        const twinkle = Math.sin(time * star.twinkleSpeed * 60 + star.twinkleOffset);
+        let alpha = star.baseAlpha + (twinkle * star.twinkleAmount * star.baseAlpha);
+
+        // Large stars get additional slow pulse
+        if (star.starType === 'large' && star.pulsePhase !== undefined) {
+          const pulse = Math.sin(time * star.pulseSpeed * 60 + star.pulsePhase);
+          alpha += pulse * 0.1 * star.baseAlpha;
+        }
+
+        // Clamp alpha
+        star.alpha = Math.max(0, Math.min(1, alpha));
+      });
+    }
+
+    async function createForegroundGrass(w, h) {
+      const grassTexture = await PIXI.Assets.load('assets/sprites/grass_fg.png');
+
+      foregroundGrassSprites = [];
+      const grassWidth = 24; // sprite width
+      const grassCount = Math.ceil(w / grassWidth) + 2;
+
+      for (let i = 0; i < grassCount; i++) {
+        const grass = new PIXI.Sprite(grassTexture);
+        grass.anchor.set(0.5, 1);
+
+        // Position along bottom edge with slight overlap
+        grass.x = i * grassWidth - grassWidth / 2;
+        grass.y = h;
+
+        // Wave offset for skew animation
+        grass.swayOffset = i * 0.3;
+
+        app.stage.addChild(grass);
+        foregroundGrassSprites.push(grass);
+      }
+    }
+
+    function animateForegroundGrass() {
+      if (!foregroundGrassSprites.length) return;
+
+      foregroundGrassSprites.forEach(grass => {
+        // Horizontal skew - top moves side to side while bottom stays anchored
+        grass.skew.x = Math.sin(time * 1.5 + grass.swayOffset) * 0.15;
+      });
+    }
+
+    async function createFallingLeaves(w, h, groundY) {
+      const leafTexture = await PIXI.Assets.load('assets/sprites/leaf.png');
+
+      leafSprites = [];
+      const leafCount = 4;
+
+      for (let i = 0; i < leafCount; i++) {
+        const leaf = new PIXI.Sprite(leafTexture);
+        leaf.anchor.set(0.5, 0.5);
+
+        // Start at random positions across the screen, staggered vertically
+        leaf.x = Math.random() * w;
+        leaf.y = Math.random() * groundY;
+
+        // Animation properties
+        leaf.fallSpeed = 0.3 + Math.random() * 0.3;
+        leaf.swaySpeed = 1 + Math.random() * 0.5;
+        leaf.swayAmount = 30 + Math.random() * 20;
+        leaf.swayOffset = Math.random() * Math.PI * 2;
+        leaf.rotationSpeed = 0.01 + Math.random() * 0.02;
+        leaf.baseX = leaf.x;
+
+        app.stage.addChild(leaf);
+        leafSprites.push(leaf);
+      }
+    }
+
+    function animateFallingLeaves() {
+      if (!leafSprites.length) return;
+
+      const h = app.screen.height;
+      const groundY = h * 0.92;
+
+      leafSprites.forEach(leaf => {
+        // Fall down
+        leaf.y += leaf.fallSpeed;
+
+        // Horizontal sway
+        leaf.x = leaf.baseX + Math.sin(time * leaf.swaySpeed + leaf.swayOffset) * leaf.swayAmount;
+
+        // Rotate
+        leaf.rotation += leaf.rotationSpeed;
+
+        // Reset when reaching ground
+        if (leaf.y > groundY) {
+          leaf.y = -20;
+          leaf.baseX = Math.random() * app.screen.width;
+          leaf.x = leaf.baseX;
+        }
+      });
+    }
+
+    async function createButterflies(w, h, groundY) {
+      // Load butterfly animation frames
+      butterflyTextures = await Promise.all([
+        PIXI.Assets.load('assets/sprites/butterfly1.png'),
+        PIXI.Assets.load('assets/sprites/butterfly2.png'),
+        PIXI.Assets.load('assets/sprites/butterfly3.png'),
+        PIXI.Assets.load('assets/sprites/butterfly4.png')
+      ]);
+
+      butterflySprites = [];
+      const butterflyCount = 4;
+      const groundHeight = h - groundY;
+
+      for (let i = 0; i < butterflyCount; i++) {
+        const butterfly = new PIXI.Sprite(butterflyTextures[0]);
+        butterfly.anchor.set(0.5, 0.5);
+
+        // Random starting position in grass area
+        butterfly.x = Math.random() * w;
+        butterfly.y = groundY + groundHeight * 0.2 + Math.random() * groundHeight * 0.5;
+
+        // Animation state
+        butterfly.frameIndex = 0;
+        butterfly.frameTimer = 0;
+        butterfly.frameSpeed = 0.15 + Math.random() * 0.05;
+        butterfly.baseY = butterfly.y;
+        butterfly.bobOffset = Math.random() * Math.PI * 2;
+        butterfly.bobSpeed = 1.5 + Math.random() * 0.5;
+        butterfly.bobAmount = 8 + Math.random() * 6;
+        butterfly.driftSpeed = 0.3 + Math.random() * 0.4;
+        butterfly.driftDirection = Math.random() > 0.5 ? 1 : -1;
+
+        app.stage.addChild(butterfly);
+        butterflySprites.push(butterfly);
+      }
+    }
+
+    function animateButterflies() {
+      if (!butterflySprites.length) return;
+
+      const w = app.screen.width;
+
+      butterflySprites.forEach(butterfly => {
+        // Frame animation (wing flap) - just frames 1 and 2
+        butterfly.frameTimer += butterfly.frameSpeed;
+        if (butterfly.frameTimer >= 1) {
+          butterfly.frameTimer = 0;
+          butterfly.frameIndex = (butterfly.frameIndex + 1) % 2;
+          butterfly.texture = butterflyTextures[butterfly.frameIndex];
+        }
+
+        // Horizontal drift
+        butterfly.x += butterfly.driftSpeed * butterfly.driftDirection;
+
+        // Wrap around screen
+        if (butterfly.x > w + 20) {
+          butterfly.x = -20;
+        } else if (butterfly.x < -20) {
+          butterfly.x = w + 20;
+        }
+
+        // Vertical bobbing
+        butterfly.y = butterfly.baseY + Math.sin(time * butterfly.bobSpeed + butterfly.bobOffset) * butterfly.bobAmount;
+
+        // Face direction of travel
+        butterfly.scale.x = butterfly.driftDirection;
+      });
+    }
+
+    async function createScatterDecorations(w, h, groundY) {
+      const decorTextures = {
+        rock: await PIXI.Assets.load('assets/sprites/rock.png'),
+        stump: await PIXI.Assets.load('assets/sprites/stump.png'),
+        bush: await PIXI.Assets.load('assets/sprites/bush.png'),
+        tuft: await PIXI.Assets.load('assets/sprites/tuft.png'),
+        flower: await PIXI.Assets.load('assets/sprites/flower.png'),
+        mushrooms: await PIXI.Assets.load('assets/sprites/mushrooms.png'),
+        log: await PIXI.Assets.load('assets/sprites/log.png'),
+        pond: await PIXI.Assets.load('assets/sprites/pond.png'),
+        pinetree: await PIXI.Assets.load('assets/sprites/pinetree.png'),
+        scarecrow: await PIXI.Assets.load('assets/sprites/scarecrow.png'),
+        wheelbarrow: await PIXI.Assets.load('assets/sprites/wheelbarrow.png'),
+        shed: await PIXI.Assets.load('assets/sprites/shed.png'),
+        bench: await PIXI.Assets.load('assets/sprites/bench.png'),
+        beehive: await PIXI.Assets.load('assets/sprites/beehive.png'),
+        lanternpost: await PIXI.Assets.load('assets/sprites/lanternpost.png'),
+        birdhouse: await PIXI.Assets.load('assets/sprites/birdhouse.png'),
+        wateringcan: await PIXI.Assets.load('assets/sprites/wateringcan.png'),
+        hedgehog: await PIXI.Assets.load('assets/sprites/hedgehog.png')
+      };
+
+      const decorContainer = new PIXI.Container();
+      decorContainer.sortableChildren = true;
+
+      // Static decoration placements (x%, y% from groundY, flip)
+      // Garden occupies x: 0.25-0.75, y: 0.35-0.75 - all decorations placed outside
+      const placements = [
+        // Rocks - left side, right side, and below garden
+        { type: 'rock', x: 0.08, y: 0.45, flip: false },
+        { type: 'rock', x: 0.15, y: 0.70, flip: true },
+        { type: 'rock', x: 0.85, y: 0.50, flip: false },
+        { type: 'rock', x: 0.92, y: 0.35, flip: true },
+        { type: 'rock', x: 0.40, y: 0.82, flip: false },
+        // Stumps - left and right of garden
+        { type: 'stump', x: 0.12, y: 0.55, flip: false },
+        { type: 'stump', x: 0.88, y: 0.65, flip: true },
+        // Bushes - around the perimeter
+        { type: 'bush', x: 0.10, y: 0.40, flip: false },
+        { type: 'bush', x: 0.18, y: 0.80, flip: true },
+        { type: 'bush', x: 0.82, y: 0.45, flip: false },
+        { type: 'bush', x: 0.90, y: 0.75, flip: true },
+        // Grass tufts - scattered outside garden
+        { type: 'tuft', x: 0.05, y: 0.30, flip: false },
+        { type: 'tuft', x: 0.12, y: 0.62, flip: true },
+        { type: 'tuft', x: 0.20, y: 0.25, flip: false },
+        { type: 'tuft', x: 0.08, y: 0.85, flip: true },
+        { type: 'tuft', x: 0.80, y: 0.28, flip: false },
+        { type: 'tuft', x: 0.88, y: 0.55, flip: true },
+        { type: 'tuft', x: 0.95, y: 0.42, flip: false },
+        { type: 'tuft', x: 0.92, y: 0.80, flip: true },
+        { type: 'tuft', x: 0.35, y: 0.88, flip: false },
+        { type: 'tuft', x: 0.65, y: 0.85, flip: true },
+        // Flowers - left, right, and below garden
+        { type: 'flower', x: 0.06, y: 0.48, flip: false },
+        { type: 'flower', x: 0.14, y: 0.72, flip: true },
+        { type: 'flower', x: 0.22, y: 0.20, flip: false },
+        { type: 'flower', x: 0.78, y: 0.22, flip: true },
+        { type: 'flower', x: 0.86, y: 0.58, flip: false },
+        { type: 'flower', x: 0.94, y: 0.38, flip: true },
+        { type: 'flower', x: 0.50, y: 0.90, flip: false },
+        { type: 'flower', x: 0.30, y: 0.78, flip: true },
+        // Mushrooms - corners and edges
+        { type: 'mushrooms', x: 0.10, y: 0.50, flip: false },
+        { type: 'mushrooms', x: 0.90, y: 0.60, flip: true },
+        { type: 'mushrooms', x: 0.55, y: 0.85, flip: false },
+        // Logs - left and right sides
+        { type: 'log', x: 0.15, y: 0.65, flip: false },
+        { type: 'log', x: 0.85, y: 0.70, flip: true },
+        // Pond - bottom right corner
+        { type: 'pond', x: 0.88, y: 0.82, flip: false },
+        // Pine trees - upper areas and sides
+        { type: 'pinetree', x: 0.10, y: 0.28, flip: false },
+        { type: 'pinetree', x: 0.90, y: 0.30, flip: true },
+        { type: 'pinetree', x: 0.18, y: 0.45, flip: false },
+        // Scarecrow - left side of garden
+        { type: 'scarecrow', x: 0.18, y: 0.52, flip: false },
+        // Wheelbarrow - right side of garden
+        { type: 'wheelbarrow', x: 0.85, y: 0.48, flip: false },
+        // Shed - upper left, the "home base"
+        { type: 'shed', x: 0.06, y: 0.38, flip: false },
+        // Bench - below garden, facing it
+        { type: 'bench', x: 0.35, y: 0.88, flip: false },
+        // Beehive - right side, near flowers
+        { type: 'beehive', x: 0.92, y: 0.44, flip: false },
+        // Lanternpost - upper right, vertical element
+        { type: 'lanternpost', x: 0.80, y: 0.26, flip: false },
+        // Birdhouse - far left, tall vertical
+        { type: 'birdhouse', x: 0.05, y: 0.55, flip: false },
+        // Watering can - left side near shed
+        { type: 'wateringcan', x: 0.12, y: 0.42, flip: false },
+        // Hedgehog - lower left, small and tucked away
+        { type: 'hedgehog', x: 0.15, y: 0.76, flip: false }
+      ];
+
+      const groundHeight = h - groundY;
+
+      // Calculate garden exclusion zone (garden + path + one tile buffer)
+      const buffer = 64; // path (32) + one tile buffer (32)
+      const gardenX = w * GARDEN.x;
+      const gardenY = groundY + groundHeight * GARDEN.y;
+      const gardenW = w * GARDEN.width;
+      const gardenH = groundHeight * GARDEN.height;
+
+      placements.forEach(({ type, x, y, flip }) => {
+        const spriteX = w * x;
+        const spriteY = groundY + groundHeight * y;
+
+        // Skip if within buffer zone of garden (including path border)
+        const inBufferX = spriteX > gardenX - buffer && spriteX < gardenX + gardenW + buffer;
+        const inBufferY = spriteY > gardenY - buffer && spriteY < gardenY + gardenH + buffer;
+        if (inBufferX && inBufferY) return;
+
+        const sprite = new PIXI.Sprite(decorTextures[type]);
+
+        sprite.anchor.set(0.5, 1);
+        sprite.x = spriteX;
+        sprite.y = spriteY;
+        sprite.zIndex = Math.floor(sprite.y);
+        sprite.scale.set(flip ? -1 : 1, 1);
+
+        decorContainer.addChild(sprite);
+      });
+
+      decorContainer.sortChildren();
+      app.stage.addChild(decorContainer);
+    }
+
+    async function createTreeBorder(w, h, groundY) {
+      const treeTexture = await PIXI.Assets.load('assets/sprites/tree.png');
+      const treeScale = 1;
+      const treeWidth = 48 * treeScale;
+      const treeHeight = 48 * treeScale;
+
+      // Top row of trees (along the grass line)
+      const topTreeCount = Math.ceil(w / treeWidth) + 1;
+      for (let i = 0; i < topTreeCount; i++) {
+        const tree = new PIXI.Sprite(treeTexture);
+        tree.scale.set(treeScale);
+        tree.anchor.set(0.5, 1);
+        tree.x = i * treeWidth + (Math.random() - 0.5) * 10;
+        tree.y = groundY + treeHeight * 0.3;
+        app.stage.addChild(tree);
+      }
+
+      // Left column of trees
+      const sideTreeCount = Math.ceil((h - groundY) / (treeHeight * 0.7)) + 1;
+      for (let i = 0; i < sideTreeCount; i++) {
+        const tree = new PIXI.Sprite(treeTexture);
+        tree.scale.set(treeScale);
+        tree.anchor.set(0.5, 1);
+        tree.x = treeWidth * 0.3 + (Math.random() - 0.5) * 8;
+        tree.y = groundY + i * (treeHeight * 0.7) + treeHeight * 0.5;
+        tree.zIndex = Math.floor(tree.y);
+        app.stage.addChild(tree);
+      }
+
+      // Right column of trees
+      for (let i = 0; i < sideTreeCount; i++) {
+        const tree = new PIXI.Sprite(treeTexture);
+        tree.scale.set(treeScale);
+        tree.anchor.set(0.5, 1);
+        tree.x = w - treeWidth * 0.3 + (Math.random() - 0.5) * 8;
+        tree.y = groundY + i * (treeHeight * 0.7) + treeHeight * 0.5;
+        tree.zIndex = Math.floor(tree.y);
+        app.stage.addChild(tree);
+      }
+    }
+
+    function drawPixelHill(graphics, width, baseY, maxHeight, stepSize) {
+      const steps = Math.ceil(width / stepSize);
+
+      graphics.moveTo(0, baseY + maxHeight);
+
+      for (let i = 0; i <= steps; i++) {
+        const x = i * stepSize;
+        // Create a rolling hill shape with pixel steps
+        const heightFactor = Math.sin(i * 0.15) * 0.5 + Math.sin(i * 0.08) * 0.3 + 0.5;
+        const y = baseY + maxHeight - (maxHeight * heightFactor);
+
+        // Snap to pixel grid for that stepped look
+        const snappedY = Math.round(y / 4) * 4;
+
+        graphics.lineTo(x, snappedY);
+        graphics.lineTo(x + stepSize, snappedY);
+      }
+
+      graphics.lineTo(width, baseY + maxHeight);
+      graphics.closePath();
+    }
+
+    async function createClouds(w, h, colors) {
+      cloudSprites = [];
+      const skyHeight = h * 0.35;
+
+      // Load the large front cloud texture
+      const cloudTexture = await PIXI.Assets.load('assets/sprites/cloud_front_large.png');
+
+      // Scale for better proportions
+      const scale = (w / cloudTexture.width) * 0.6;
+      const scaledWidth = cloudTexture.width * scale;
+      const scaledHeight = cloudTexture.height * scale;
+
+      // Tile horizontally to cover viewport width, mirroring alternating tiles for seamless look
+      const tilesNeeded = Math.ceil(w / scaledWidth) + 1;
+
+      for (let i = 0; i < tilesNeeded; i++) {
+        const cloud = new PIXI.Sprite(cloudTexture);
+        cloud.anchor.set(0, 0);
+        cloud.y = skyHeight - scaledHeight;
+
+        // Mirror every other tile for seamless edges
+        if (i % 2 === 0) {
+          cloud.scale.set(scale, scale);
+          cloud.x = i * scaledWidth;
+        } else {
+          cloud.scale.set(-scale, scale); // Flip horizontally
+          cloud.x = (i + 1) * scaledWidth; // Offset for flipped sprite
+        }
+
+        app.stage.addChild(cloud);
+        cloudSprites.push(cloud);
+      }
+    }
+
+    function animateClouds() {
+      // Static sky - no cloud animation
+    }
+
+    function animatePlants() {
+      plantSprites.forEach((sprite, index) => {
+        // Gentle sway based on time + slight offset per plant
+        const sway = Math.sin(time + index * 0.5) * 0.03;
+        sprite.rotation = sway;
+      });
+    }
+
+    async function renderPlants() {
+      // Clear existing plant sprites
+      if (app.stage.plantContainer) {
+        app.stage.plantContainer.removeChildren();
+      }
+      plantSprites = [];
+
+      // Load all growth stage textures
+      const stageTextures = await Promise.all([
+        PIXI.Assets.load('assets/sprites/plant_seed.png'),
+        PIXI.Assets.load('assets/sprites/plant_bud.png'),
+        PIXI.Assets.load('assets/sprites/plant_flower.png')
+      ]);
+
+      plants.forEach((plant, index) => {
+        const stage = getGrowthStage(plant.planted_at);
+        const sprite = new PIXI.Sprite(stageTextures[stage]);
+
+        // Scale down to fit garden (sprites are large)
+        sprite.scale.set(0.25);
+
+        // Position based on stored percentages
+        sprite.x = (plant.x_position / 100) * app.screen.width;
+        sprite.y = (plant.y_position / 100) * app.screen.height;
+
+        // Anchor at bottom center for natural sway
+        sprite.anchor.set(0.5, 1);
+
+        // Z-order: plants lower on screen appear in front
+        sprite.zIndex = Math.floor(plant.y_position);
+
+        app.stage.plantContainer.addChild(sprite);
+        plantSprites.push(sprite);
+      });
+
+      // Sort by z-index
+      app.stage.plantContainer.sortChildren();
+    }
+
+    function getGrowthStage(plantedAt) {
+      const now = new Date();
+      const planted = new Date(plantedAt);
+      const daysElapsed = (now - planted) / (1000 * 60 * 60 * 24);
+
+      // Stage 0 (seed): days 0-2
+      // Stage 1 (bud): days 3-5
+      // Stage 2 (flower): days 6+
+      if (daysElapsed >= 6) return 2;
+      if (daysElapsed >= 3) return 1;
+      return 0;
+    }
+
+    function onPlantClick(event) {
+      if (!selectedPlant || !canPlantToday) return;
+      if (!app.gardenBounds) return;
+
+      const pos = event.global;
+      const bounds = app.gardenBounds;
+
+      // Check if click is within garden bounds
+      if (pos.x < bounds.x || pos.x > bounds.x + bounds.width) return;
+      if (pos.y < bounds.y || pos.y > bounds.y + bounds.height) return;
+
+      // Convert to percentage for storage
+      const x = (pos.x / app.screen.width) * 100;
+      const y = (pos.y / app.screen.height) * 100;
+
+      plantSeed(x, y);
+    }
+
+    // Supabase functions
+    function checkCanPlant() {
+      // Testing mode: always allow planting
+      return true;
+    }
+
+    function showFeedback(message, duration = 3000) {
+      feedback.textContent = message;
+      feedback.classList.add('show');
+      setTimeout(() => feedback.classList.remove('show'), duration);
+    }
+
+    async function clearAllPlants() {
+      if (!supabaseClient) return;
+      try {
+        await supabaseClient.from('forest_plants').delete().neq('id', 0);
+        plants = [];
+        console.log('Cleared all plants');
+      } catch (err) {
+        console.error('Clear error:', err);
+      }
+    }
+
+    async function fetchPlants() {
+      if (!supabaseClient) {
+        return;
+      }
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('forest_plants')
+          .select('*')
+          .order('planted_at', { ascending: true });
+
+        if (error) {
+          console.error('Supabase error:', error);
+          return;
+        }
+
+        plants = data || [];
+        await renderPlants();
+      } catch (err) {
+        console.error('Fetch error:', err);
+      }
+    }
+
+    async function plantSeed(x, y) {
+      if (!selectedPlant || !canPlantToday || !supabaseClient) return;
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('forest_plants')
+          .insert([{
+            plant_type: selectedPlant,
+            x_position: x,
+            y_position: y
+          }])
+          .select();
+
+        if (error) {
+          console.error('Plant error:', error);
+          showFeedback('Could not plant. Try again?');
+          return;
+        }
+
+        plants.push(data[0]);
+        await renderPlants();
+
+        // Testing mode: don't restrict planting
+        // localStorage.setItem('forest_last_planted', new Date().toISOString());
+        // canPlantToday = false;
+        // updatePlantingUI();
+
+        showFeedback('Planted a seed! It will bloom in 7 days.', 4000);
+
+      } catch (err) {
+        console.error('Plant error:', err);
+        showFeedback('Could not plant. Try again?');
+      }
+    }
+
+    function updatePlantingUI() {
+      if (!canPlantToday) {
+        plantButton.classList.add('disabled');
+      } else {
+        plantButton.classList.remove('disabled');
+      }
+    }
+
+    // Event listeners
+    plantButton.addEventListener('click', () => {
+      if (!canPlantToday) {
+        showFeedback('You planted today. Come back tomorrow.', 2500);
+        return;
+      }
+      showFeedback('Click in the garden to plant your seed!', 2500);
+    });
+
+    // Initialize
+    async function init() {
+      try {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      } catch (err) {
+        console.error('Supabase init error:', err);
+      }
+
+      canPlantToday = checkCanPlant();
+      updatePlantingUI();
+
+      await initPixi();
+      await clearAllPlants(); // Testing: clear existing plants
+      await fetchPlants();
+
+      setInterval(fetchPlants, 300000);
+    }
+
+    init();
+  </script>
+</body>
+</html>
